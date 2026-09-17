@@ -146,7 +146,8 @@ function adminKeyboard(lang: Lang) {
     .text(t.adminStats)
     .row()
     .text(t.back)
-    .resized();
+    .resized()
+    .persistent();
 }
 
 async function translateSimple(text: string, from: Lang): Promise<{ uz: string; ru: string; en: string }> {
@@ -241,7 +242,10 @@ export function createBot() {
 
     if (text === t.lang) {
       const kb = new InlineKeyboard().text("UZ", "lang:uz").text("RU", "lang:ru").text("EN", "lang:en");
-      await sendScreen(ctx, "Language / Til / Язык", { reply_markup: kb });
+      await sendScreen(ctx, "Language / Til / Язык", {
+        reply_markup: kb,
+        menu: mainKeyboard(lang, admin),
+      });
       return;
     }
 
@@ -285,7 +289,11 @@ export function createBot() {
         .text("✨ Строка на сайт", "anews:ticker")
         .row()
         .text("📋 Список", "anews:list");
-      await sendScreen(ctx, "📰 <b>Новости</b>\nЧто сделаем?", { parse_mode: "HTML", reply_markup: kb });
+      await sendScreen(ctx, "📰 <b>Новости</b>\nЧто сделаем?", {
+        parse_mode: "HTML",
+        reply_markup: kb,
+        menu: adminKeyboard(lang),
+      });
       return;
     }
 
@@ -390,7 +398,10 @@ export function createBot() {
     const kb = new InlineKeyboard();
     masters.forEach((m) => kb.text(m.name, `mst:${m.id}`).row());
     ctx.session.step = "master";
-    await sendScreen(ctx, T[lang].chooseMaster, { reply_markup: kb });
+    await sendScreen(ctx, T[lang].chooseMaster, {
+      reply_markup: kb,
+      menu: mainKeyboard(lang, isAdmin(ctx.from?.id)),
+    });
   });
 
   bot.callbackQuery(/^mst:(.+)$/, async (ctx) => {
@@ -423,7 +434,10 @@ export function createBot() {
       if ((i + 1) % 3 === 0) kb.row();
     });
     ctx.session.step = "time";
-    await sendScreen(ctx, T[lang].chooseTime, { reply_markup: kb });
+    await sendScreen(ctx, T[lang].chooseTime, {
+      reply_markup: kb,
+      menu: mainKeyboard(lang, isAdmin(ctx.from?.id)),
+    });
   });
 
   bot.callbackQuery(/^time:(.+)$/, async (ctx) => {
@@ -634,7 +648,10 @@ export function createBot() {
     });
     ctx.session.step = "service";
     await touchBotUser(ctx.from!, "book_start");
-    await sendFreshScreen(ctx, T[lang].chooseService, { reply_markup: kb });
+    await sendFreshScreen(ctx, T[lang].chooseService, {
+      reply_markup: kb,
+      menu: mainKeyboard(lang, isAdmin(ctx.from?.id)),
+    });
   }
 
   async function askDates(ctx: BotContext) {
@@ -651,7 +668,10 @@ export function createBot() {
       if (shown % 4 === 0) kb.row();
     }
     ctx.session.step = "date";
-    await sendScreen(ctx, T[lang].chooseDate, { reply_markup: kb });
+    await sendScreen(ctx, T[lang].chooseDate, {
+      reply_markup: kb,
+      menu: mainKeyboard(lang, isAdmin(ctx.from?.id)),
+    });
   }
 
   async function showMy(ctx: BotContext) {
@@ -664,8 +684,9 @@ export function createBot() {
       orderBy: { startsAt: "asc" },
       take: 5,
     });
+    const menu = mainKeyboard(ctx.session.lang, isAdmin(ctx.from?.id));
     if (!bookings.length) {
-      await sendScreen(ctx, T[ctx.session.lang].noBookings);
+      await sendScreen(ctx, T[ctx.session.lang].noBookings, { menu });
       return;
     }
     let text = `<b>${T[ctx.session.lang].my}</b>\n\n`;
@@ -674,7 +695,7 @@ export function createBot() {
       text += `${format(b.startsAt, "dd.MM.yyyy HH:mm")}\n${serviceName(b.service, ctx.session.lang)} · ${b.master.name}\n${b.status}\n\n`;
       kb.text(`❌ ${format(b.startsAt, "dd.MM HH:mm")}`, `cancel:${b.id}`).row();
     }
-    await sendScreen(ctx, text.trim(), { parse_mode: "HTML", reply_markup: kb });
+    await sendScreen(ctx, text.trim(), { parse_mode: "HTML", reply_markup: kb, menu });
   }
 
   async function showNews(ctx: BotContext) {
@@ -684,16 +705,17 @@ export function createBot() {
       orderBy: { createdAt: "desc" },
       take: 5,
     });
+    const menu = mainKeyboard(ctx.session.lang, isAdmin(ctx.from?.id));
     const kb = new InlineKeyboard().text(
       T[ctx.session.lang].unsub + " / " + T[ctx.session.lang].sub,
       "news:toggle",
     );
     if (!posts.length) {
-      await sendScreen(ctx, "Пока нет новостей", { reply_markup: kb });
+      await sendScreen(ctx, "Пока нет новостей", { reply_markup: kb, menu });
       return;
     }
     const text = posts.map((p) => `📰 <b>${format(p.createdAt, "dd.MM")}</b>\n${p.text}`).join("\n\n");
-    await sendScreen(ctx, text, { parse_mode: "HTML", reply_markup: kb });
+    await sendScreen(ctx, text, { parse_mode: "HTML", reply_markup: kb, menu });
   }
 
   async function adminBookings(ctx: BotContext) {
@@ -743,10 +765,13 @@ export function createBot() {
       await sendFreshScreen(ctx, text, {
         parse_mode: "HTML",
         reply_markup: kb,
+        menu: adminKeyboard(ctx.session.lang),
       });
     } catch (e) {
       console.error("adminBookings failed", e);
-      await ctx.reply("Не удалось загрузить записи. Попробуйте ещё раз.");
+      await ctx.reply("Не удалось загрузить записи. Попробуйте ещё раз.", {
+        reply_markup: adminKeyboard(ctx.session.lang),
+      });
     }
   }
 
@@ -756,7 +781,10 @@ export function createBot() {
     services.forEach((s) => {
       kb.text(`${s.nameRu}: ${s.price.toLocaleString()}`, `price:${s.id}`).row();
     });
-    await sendScreen(ctx, "Выберите услугу для смены цены:", { reply_markup: kb });
+    await sendScreen(ctx, "Выберите услугу для смены цены:", {
+      reply_markup: kb,
+      menu: adminKeyboard(ctx.session.lang),
+    });
   }
 
   async function adminStats(ctx: BotContext) {
@@ -776,7 +804,9 @@ export function createBot() {
           `${format(a.createdAt, "dd.MM HH:mm")} · ${a.user.username || a.user.telegramId} · ${a.action}`,
       )
       .join("\n");
-    await sendScreen(ctx, `👥 Всего: ${total}\n🔥 Активны 7д: ${active}\n\n${lines || "—"}`);
+    await sendScreen(ctx, `👥 Всего: ${total}\n🔥 Активны 7д: ${active}\n\n${lines || "—"}`, {
+      menu: adminKeyboard(ctx.session.lang),
+    });
   }
 
   bot.callbackQuery("noop", async (ctx) => {

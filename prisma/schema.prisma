@@ -97,7 +97,7 @@ model SiteSettings {
   lng            Float    @default(69.28)
   instagram      String   @default("https://www.instagram.com/dr.meedina/")
   telegram       String   @default("https://t.me/drmeedina")
-  telegramBot    String   @default("https://t.me/drmeedina?start=book")
+  telegramBot    String   @default("https://t.me/Dr_Meedinabot?start=book")
   taglineUz      String   @default("Toza teri — sizning ishonchingiz")
   taglineRu      String   @default("Чистая кожа — твоя уверенность")
   taglineEn      String   @default("Clear skin is your confidence")

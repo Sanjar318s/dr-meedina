@@ -23,7 +23,7 @@ export const studioConfig = {
   socials: {
     instagram: "https://www.instagram.com/dr.meedina/",
     telegram: "https://t.me/drmeedina",
-    telegramBot: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME || "drmeedina"}?start=book`,
+    telegramBot: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME || "Dr_Meedinabot"}?start=book`,
   },
   tagline: {
     uz: "Toza teri — sizning ishonchingiz",

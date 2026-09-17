@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+@theme {
+  --color-pearl: #f6f1ec;
+  --color-mist: #ebe4db;
+  --color-blush: #f0e6e0;
+  --color-charcoal: #1a1614;
+  --color-ink: #1a1614;
+  --color-muted: #6b635c;
+  --color-sand: #8a7f74;
+  --color-cream: #f6f1ec;
+  --color-gold: #b8956c;
+  --color-gold-dim: #9a7a52;
+  --color-rose: #c4a090;
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(196, 160, 144, 0.18), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 0%, rgba(184, 149, 108, 0.12), transparent 50%),
+    linear-gradient(180deg, #f8f4ef 0%, #f3ebe3 45%, #efe6dc 100%);
+  color: var(--color-charcoal);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  min-height: 100%;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-gold) 35%, transparent);
+  color: var(--color-charcoal);
+}
+
+.surface-soft {
+  background: color-mix(in srgb, white 55%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-gold);
+  background: var(--color-gold);
+  color: white;
+  padding: 0.85rem 1.75rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.btn-primary:hover {
+  background: var(--color-gold-dim);
+  border-color: var(--color-gold-dim);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px rgba(184, 149, 108, 0.25);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--color-charcoal) 18%, transparent);
+  color: var(--color-charcoal);
+  padding: 0.85rem 1.75rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
+}
+
+.btn-ghost:hover {
+  border-color: var(--color-gold);
+  color: var(--color-gold-dim);
+  background: color-mix(in srgb, white 40%, transparent);
+}

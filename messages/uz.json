@@ -1,0 +1,80 @@
+{
+  "nav": {
+    "home": "Bosh sahifa",
+    "services": "Xizmatlar",
+    "masters": "Shifokor",
+    "booking": "Yozilish",
+    "contacts": "Kontaktlar"
+  },
+  "hero": {
+    "brand": "dr.meedina",
+    "eyebrow": "Shifokor-kosmetolog · Toshkent",
+    "headline": "Toza teri — sizning ishonchingiz",
+    "sub": "Tibbiy ma'lumotli kosmetolog. Har bir mijozga individual yondashuv.",
+    "cta": "Yozilish",
+    "ctaSecondary": "Instagram"
+  },
+  "about": {
+    "title": "dr.meedina haqida",
+    "text": "Men Madina — tibbiy ma'lumotli shifokor-kosmetologman. Asosiy e'tibor: toza teri, tabiiy natija va sizning maqsadingizga ehtiyotkor yondashuv. Qabul Toshkentda."
+  },
+  "services": {
+    "title": "Xizmatlar",
+    "subtitle": "dr.meedina amaliyotidagi muolajalar",
+    "select": "Tanlash",
+    "duration": "{minutes} daqiqa",
+    "from": "dan"
+  },
+  "masters": {
+    "title": "Sizning shifokoringiz",
+    "subtitle": "Madina — tibbiy ma'lumotli kosmetolog"
+  },
+  "reviews": {
+    "title": "Sharhlar",
+    "items": [
+      {
+        "name": "Aziza",
+        "text": "Yuz tozalash yumshoq o'tdi, teri haqiqatan porlaydi. Madina tinch va aniq tushuntiradi."
+      },
+      {
+        "name": "Dilnoza",
+        "text": "Lablar uchun keldim — natija tabiiy, ortiqcha emas. Juda mamnunman."
+      },
+      {
+        "name": "Sabina",
+        "text": "Sayt orqali yozildim, hammasi qulay. Tibbiy yondashuv sezilib turadi."
+      }
+    ]
+  },
+  "contacts": {
+    "title": "Kontaktlar",
+    "subtitle": "Toshkent · Instagram va Telegram",
+    "address": "Shahar",
+    "phone": "Aloqa",
+    "bot": "Telegramga yozish",
+    "instagram": "Instagram @dr.meedina",
+    "map": "Xarita"
+  },
+  "booking": {
+    "title": "Onlayn yozilish",
+    "stepService": "Xizmat",
+    "stepMaster": "Shifokor",
+    "stepSlot": "Sana va vaqt",
+    "stepContacts": "Kontaktlar",
+    "stepConfirm": "Tasdiqlash",
+    "next": "Keyingi",
+    "back": "Orqaga",
+    "submit": "Yozilishni tasdiqlash",
+    "name": "Ism",
+    "phone": "Telefon",
+    "date": "Sana",
+    "time": "Vaqt",
+    "noSlots": "Bu kunda bo'sh vaqt yo'q",
+    "success": "Yozilish qabul qilindi! Tez orada Telegram yoki telefon orqali bog'lanamiz.",
+    "error": "Xatolik. Boshqa vaqtni tanlang.",
+    "summary": "Yozilish ma'lumotlari"
+  },
+  "footer": {
+    "rights": "Barcha huquqlar himoyalangan"
+  }
+}

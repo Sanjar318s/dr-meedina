@@ -1,0 +1,80 @@
+{
+  "nav": {
+    "home": "Home",
+    "services": "Services",
+    "masters": "Doctor",
+    "booking": "Book",
+    "contacts": "Contacts"
+  },
+  "hero": {
+    "brand": "dr.meedina",
+    "eyebrow": "Cosmetologist MD · Tashkent",
+    "headline": "Clear skin is your confidence",
+    "sub": "A cosmetologist with medical education. Personalized care for every patient.",
+    "cta": "Book now",
+    "ctaSecondary": "Instagram"
+  },
+  "about": {
+    "title": "About dr.meedina",
+    "text": "I'm Madina — a cosmetologist with medical education. I focus on healthy skin, natural results, and careful attention to your goals. Appointments in Tashkent."
+  },
+  "services": {
+    "title": "Services",
+    "subtitle": "Treatments from dr.meedina practice",
+    "select": "Select",
+    "duration": "{minutes} min",
+    "from": "from"
+  },
+  "masters": {
+    "title": "Your doctor",
+    "subtitle": "Madina — medically trained cosmetologist"
+  },
+  "reviews": {
+    "title": "Reviews",
+    "items": [
+      {
+        "name": "Aziza",
+        "text": "Facial cleansing felt gentle and my skin truly glowed. Madina explains everything calmly."
+      },
+      {
+        "name": "Dilnoza",
+        "text": "Got lip contouring — natural result, nothing overdone. Very happy."
+      },
+      {
+        "name": "Sabina",
+        "text": "Booked online, everything was easy. You can feel the medical, careful approach."
+      }
+    ]
+  },
+  "contacts": {
+    "title": "Contacts",
+    "subtitle": "Tashkent · Instagram & Telegram",
+    "address": "City",
+    "phone": "Contact",
+    "bot": "Message on Telegram",
+    "instagram": "Instagram @dr.meedina",
+    "map": "Map"
+  },
+  "booking": {
+    "title": "Online booking",
+    "stepService": "Service",
+    "stepMaster": "Doctor",
+    "stepSlot": "Date & time",
+    "stepContacts": "Contacts",
+    "stepConfirm": "Confirm",
+    "next": "Next",
+    "back": "Back",
+    "submit": "Confirm booking",
+    "name": "Name",
+    "phone": "Phone",
+    "date": "Date",
+    "time": "Time",
+    "noSlots": "No free slots on this day",
+    "success": "Booking received! We'll contact you soon via Telegram or phone.",
+    "error": "Something went wrong. Please pick another time.",
+    "summary": "Booking details"
+  },
+  "footer": {
+    "rights": "All rights reserved"
+  }
+}

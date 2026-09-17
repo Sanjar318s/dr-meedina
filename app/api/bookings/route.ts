@@ -22,6 +22,15 @@ export async function POST(req: NextRequest) {
       id: booking.id,
       status: booking.status,
       checkToken: booking.checkToken,
+      startsAt: booking.startsAt.toISOString(),
+      clientName: booking.clientName,
+      clientPhone: booking.clientPhone,
+      service: {
+        nameRu: booking.service.nameRu,
+        nameUz: booking.service.nameUz,
+        nameEn: booking.service.nameEn,
+      },
+      master: { name: booking.master.name },
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "ERROR";

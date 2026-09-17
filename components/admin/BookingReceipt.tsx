@@ -9,21 +9,62 @@ import { jsPDF } from "jspdf";
 import { Download, FileImage, QrCode } from "lucide-react";
 import { studioConfig } from "@/lib/studio-config";
 
+export type ReceiptBooking = {
+  id: string;
+  clientName: string;
+  clientPhone: string;
+  startsAt: string;
+  status: string;
+  checkToken: string;
+  service: { nameRu: string; nameUz?: string; nameEn?: string };
+  master: { name: string };
+};
+
+type Labels = {
+  title: string;
+  client: string;
+  phone: string;
+  service: string;
+  master: string;
+  when: string;
+  status: string;
+  qrHint: string;
+  downloadPng: string;
+  downloadPdf: string;
+  checkIn?: string;
+};
+
+const DEFAULT_LABELS: Labels = {
+  title: "Чек записи",
+  client: "Клиент",
+  phone: "Телефон",
+  service: "Услуга",
+  master: "Врач",
+  when: "Когда",
+  status: "Статус",
+  qrHint: "Покажите этот QR в клинике — одноразовый check-in",
+  downloadPng: "Скачать PNG",
+  downloadPdf: "Скачать PDF",
+  checkIn: "Check-in",
+};
+
 type Props = {
-  booking: {
-    id: string;
-    clientName: string;
-    clientPhone: string;
-    startsAt: string;
-    status: string;
-    checkToken: string;
-    service: { nameRu: string };
-    master: { name: string };
-  };
+  booking: ReceiptBooking;
+  labels?: Partial<Labels>;
+  /** Admin-only: mark SERVED from dashboard */
+  showCheckIn?: boolean;
+  serviceName?: string;
   onCheckIn?: () => void;
 };
 
-export function BookingReceipt({ booking, onCheckIn }: Props) {
+export function BookingReceipt({
+  booking,
+  labels: labelsProp,
+  showCheckIn = false,
+  serviceName,
+  onCheckIn,
+}: Props) {
+  const labels = { ...DEFAULT_LABELS, ...labelsProp };
   const ref = useRef<HTMLDivElement>(null);
   const [qr, setQr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -33,12 +74,15 @@ export function BookingReceipt({ booking, onCheckIn }: Props) {
   const checkUrl = `${origin}/admin/checkin?token=${booking.checkToken}`;
 
   useEffect(() => {
-    QRCode.toDataURL(checkUrl, { width: 220, margin: 1, color: { dark: "#1a1510", light: "#fff8f0" } }).then(
-      setQr,
-    );
+    QRCode.toDataURL(checkUrl, {
+      width: 220,
+      margin: 1,
+      color: { dark: "#1a1510", light: "#fff8f0" },
+    }).then(setQr);
   }, [checkUrl]);
 
   const local = toZonedTime(new Date(booking.startsAt), studioConfig.timezone);
+  const svc = serviceName || booking.service.nameRu;
 
   async function downloadPng() {
     if (!ref.current) return;
@@ -86,54 +130,68 @@ export function BookingReceipt({ booking, onCheckIn }: Props) {
   }
 
   return (
-    <div className="space-y-3 border border-white/10 bg-white/[0.03] p-4">
+    <div className="space-y-3">
       <div
         ref={ref}
-        className="mx-auto max-w-sm bg-[#fff8f0] p-6 text-[#1a1510]"
+        className="mx-auto max-w-sm bg-[#fff8f0] p-6 text-[#1a1510] shadow-lg"
         style={{ fontFamily: "Georgia, serif" }}
       >
         <p className="text-center text-xs uppercase tracking-[0.25em] text-[#8a6a3d]">Dr.Meedina</p>
-        <h3 className="mt-2 text-center text-2xl">Чек записи</h3>
+        <h3 className="mt-2 text-center text-2xl">{labels.title}</h3>
         <div className="mt-5 space-y-2 text-sm leading-relaxed">
           <p>
-            <span className="opacity-60">Клиент:</span> {booking.clientName}
+            <span className="opacity-60">{labels.client}:</span> {booking.clientName}
           </p>
           <p>
-            <span className="opacity-60">Телефон:</span> {booking.clientPhone}
+            <span className="opacity-60">{labels.phone}:</span> {booking.clientPhone}
           </p>
           <p>
-            <span className="opacity-60">Услуга:</span> {booking.service.nameRu}
+            <span className="opacity-60">{labels.service}:</span> {svc}
           </p>
           <p>
-            <span className="opacity-60">Врач:</span> {booking.master.name}
+            <span className="opacity-60">{labels.master}:</span> {booking.master.name}
           </p>
           <p>
-            <span className="opacity-60">Когда:</span> {format(local, "dd.MM.yyyy HH:mm")}
+            <span className="opacity-60">{labels.when}:</span> {format(local, "dd.MM.yyyy HH:mm")}
           </p>
           <p>
-            <span className="opacity-60">Статус:</span> {booking.status}
+            <span className="opacity-60">{labels.status}:</span> {booking.status}
           </p>
         </div>
         {qr && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={qr} alt="QR" className="mx-auto mt-5 h-40 w-40" />
         )}
-        <p className="mt-2 text-center text-[10px] opacity-50">QR для check-in в клинике</p>
+        <p className="mt-2 text-center text-[10px] leading-snug opacity-60">{labels.qrHint}</p>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={busy} onClick={downloadPng} className="inline-flex items-center gap-1 text-xs text-gold">
-          <FileImage className="h-3.5 w-3.5" /> PNG
+      <div className="flex flex-wrap justify-center gap-3">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={downloadPng}
+          className="inline-flex items-center gap-2 border border-gold/50 px-4 py-2 text-xs uppercase tracking-wider text-gold transition hover:bg-gold/10"
+        >
+          <FileImage className="h-3.5 w-3.5" /> {labels.downloadPng}
         </button>
-        <button type="button" disabled={busy} onClick={downloadPdf} className="inline-flex items-center gap-1 text-xs text-gold">
-          <Download className="h-3.5 w-3.5" /> PDF
+        <button
+          type="button"
+          disabled={busy}
+          onClick={downloadPdf}
+          className="inline-flex items-center gap-2 border border-gold/50 px-4 py-2 text-xs uppercase tracking-wider text-gold transition hover:bg-gold/10"
+        >
+          <Download className="h-3.5 w-3.5" /> {labels.downloadPdf}
         </button>
-        {booking.status !== "SERVED" && booking.status !== "CANCELLED" && (
-          <button type="button" onClick={doCheckIn} className="inline-flex items-center gap-1 text-xs text-emerald-300">
-            <QrCode className="h-3.5 w-3.5" /> Check-in
+        {showCheckIn && booking.status !== "SERVED" && booking.status !== "CANCELLED" && (
+          <button
+            type="button"
+            onClick={doCheckIn}
+            className="inline-flex items-center gap-1 text-xs text-emerald-300"
+          >
+            <QrCode className="h-3.5 w-3.5" /> {labels.checkIn}
           </button>
         )}
       </div>
-      {checkMsg && <p className="text-xs text-gold">{checkMsg}</p>}
+      {checkMsg && <p className="text-center text-xs text-gold">{checkMsg}</p>}
     </div>
   );
 }

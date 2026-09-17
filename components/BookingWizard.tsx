@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { pickName, formatPrice } from "@/lib/i18n-fields";
 import type { AppLocale } from "@/lib/studio-config";
+import { BookingReceipt } from "@/components/admin/BookingReceipt";
 
 type Service = {
   id: string;
@@ -49,6 +50,16 @@ export function BookingWizard() {
   const [error, setError] = useState("");
   const [skipMaster, setSkipMaster] = useState(false);
   const [dayOff, setDayOff] = useState(false);
+  const [receipt, setReceipt] = useState<{
+    id: string;
+    clientName: string;
+    clientPhone: string;
+    startsAt: string;
+    status: string;
+    checkToken: string;
+    service: { nameRu: string; nameUz?: string; nameEn?: string };
+    master: { name: string };
+  } | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -148,6 +159,17 @@ export function BookingWizard() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || "error");
       }
+      const body = await res.json();
+      setReceipt({
+        id: body.id,
+        clientName: body.clientName,
+        clientPhone: body.clientPhone,
+        startsAt: body.startsAt,
+        status: body.status,
+        checkToken: body.checkToken,
+        service: body.service,
+        master: body.master,
+      });
       setDone(true);
     } catch {
       setError(t("error"));
@@ -156,15 +178,41 @@ export function BookingWizard() {
     }
   }
 
-  if (done) {
+  if (done && receipt) {
+    const svcName =
+      locale === "uz"
+        ? receipt.service.nameUz || receipt.service.nameRu
+        : locale === "en"
+          ? receipt.service.nameEn || receipt.service.nameRu
+          : receipt.service.nameRu;
     return (
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="mt-10 font-display text-2xl text-gold"
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mt-8 space-y-6"
       >
-        {t("success")}
-      </motion.p>
+        <div>
+          <p className="font-display text-3xl text-gold">{t("success")}</p>
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">{t("successHint")}</p>
+        </div>
+        <BookingReceipt
+          booking={receipt}
+          serviceName={svcName}
+          showCheckIn={false}
+          labels={{
+            title: t("receiptTitle"),
+            client: t("receiptClient"),
+            phone: t("receiptPhone"),
+            service: t("receiptService"),
+            master: t("receiptMaster"),
+            when: t("receiptWhen"),
+            status: t("receiptStatus"),
+            qrHint: t("receiptQrHint"),
+            downloadPng: t("downloadPng"),
+            downloadPdf: t("downloadPdf"),
+          }}
+        />
+      </motion.div>
     );
   }
 

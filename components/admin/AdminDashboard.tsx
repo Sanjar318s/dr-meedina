@@ -358,6 +358,7 @@ export function AdminDashboard() {
             return (
               <BookingReceipt
                 booking={b}
+                showCheckIn
                 onCheckIn={() => {
                   loadBookings();
                   setReceiptId(null);

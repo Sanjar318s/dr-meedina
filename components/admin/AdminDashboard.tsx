@@ -943,40 +943,60 @@ function SiteForm({
     }));
   }
 
+  function mergeDraft(draft: string, ru: unknown, uz: unknown, en: unknown) {
+    // Always write the draft into the active language; keep other langs unless empty.
+    return {
+      ru: writeLang === "ru" ? draft : String(ru || draft),
+      uz: writeLang === "uz" ? draft : String(uz || draft),
+      en: writeLang === "en" ? draft : String(en || draft),
+    };
+  }
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    // Ensure draft fields land on the write language if user skipped auto-translate
+    const h = mergeDraft(draftHeadline, form.heroHeadlineRu, form.heroHeadlineUz, form.heroHeadlineEn);
+    const s = mergeDraft(draftSub, form.heroSubRu, form.heroSubUz, form.heroSubEn);
+    const at = mergeDraft(draftAboutTitle, form.aboutTitleRu, form.aboutTitleUz, form.aboutTitleEn);
+    const ab = mergeDraft(draftAboutText, form.aboutTextRu, form.aboutTextUz, form.aboutTextEn);
+    const tg = mergeDraft(draftTagline, form.taglineRu, form.taglineUz, form.taglineEn);
+    const ad = mergeDraft(draftAddress, form.addressRu, form.addressUz, form.addressEn);
+    const pn = mergeDraft(draftPhoneNote, form.phoneNoteRu, form.phoneNoteUz, form.phoneNoteEn);
     const payload = {
       ...form,
-      heroHeadlineRu: form.heroHeadlineRu || draftHeadline,
-      heroHeadlineUz: form.heroHeadlineUz || draftHeadline,
-      heroHeadlineEn: form.heroHeadlineEn || draftHeadline,
-      heroSubRu: form.heroSubRu || draftSub,
-      heroSubUz: form.heroSubUz || draftSub,
-      heroSubEn: form.heroSubEn || draftSub,
-      aboutTitleRu: form.aboutTitleRu || draftAboutTitle,
-      aboutTitleUz: form.aboutTitleUz || draftAboutTitle,
-      aboutTitleEn: form.aboutTitleEn || draftAboutTitle,
-      aboutTextRu: form.aboutTextRu || draftAboutText,
-      aboutTextUz: form.aboutTextUz || draftAboutText,
-      aboutTextEn: form.aboutTextEn || draftAboutText,
-      taglineRu: form.taglineRu || draftTagline,
-      taglineUz: form.taglineUz || draftTagline,
-      taglineEn: form.taglineEn || draftTagline,
-      addressRu: form.addressRu || draftAddress,
-      addressUz: form.addressUz || draftAddress,
-      addressEn: form.addressEn || draftAddress,
-      phoneNoteRu: form.phoneNoteRu || draftPhoneNote,
-      phoneNoteUz: form.phoneNoteUz || draftPhoneNote,
-      phoneNoteEn: form.phoneNoteEn || draftPhoneNote,
+      heroHeadlineRu: h.ru,
+      heroHeadlineUz: h.uz,
+      heroHeadlineEn: h.en,
+      heroSubRu: s.ru,
+      heroSubUz: s.uz,
+      heroSubEn: s.en,
+      aboutTitleRu: at.ru,
+      aboutTitleUz: at.uz,
+      aboutTitleEn: at.en,
+      aboutTextRu: ab.ru,
+      aboutTextUz: ab.uz,
+      aboutTextEn: ab.en,
+      taglineRu: tg.ru,
+      taglineUz: tg.uz,
+      taglineEn: tg.en,
+      addressRu: ad.ru,
+      addressUz: ad.uz,
+      addressEn: ad.en,
+      phoneNoteRu: pn.ru,
+      phoneNoteUz: pn.uz,
+      phoneNoteEn: pn.en,
       lat: Number(form.lat),
       lng: Number(form.lng),
     };
-    await fetch("/api/admin/settings", {
+    const res = await fetch("/api/admin/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+    if (!res.ok) {
+      alert("Не удалось сохранить. Проверьте поля и попробуйте снова.");
+      return;
+    }
+    setForm((f) => ({ ...f, ...payload }));
     onSaved();
   }
 
@@ -1082,8 +1102,18 @@ function SiteForm({
             lat={Number(form.lat) || 41.33}
             lng={Number(form.lng) || 69.28}
             onConfirm={({ lat, lng, addressHint }) => {
-              set("lat", lat);
-              set("lng", lng);
+              setForm((f) => ({
+                ...f,
+                lat,
+                lng,
+                ...(addressHint
+                  ? {
+                      addressRu: addressHint,
+                      addressUz: addressHint,
+                      addressEn: addressHint,
+                    }
+                  : {}),
+              }));
               if (addressHint) setDraftAddress(addressHint);
             }}
           />

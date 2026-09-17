@@ -29,6 +29,7 @@ import { MultiMediaAttach } from "@/components/admin/MultiMediaAttach";
 import { FieldHelp } from "@/components/admin/FieldHelp";
 import { WriteLangSwitch, autoTranslate, type WriteLang } from "@/components/admin/WriteLangSwitch";
 import { BookingReceipt } from "@/components/admin/BookingReceipt";
+import { MapPicker } from "@/components/admin/MapPicker";
 
 type Booking = {
   id: string;
@@ -1014,13 +1015,13 @@ function SiteForm({
 
       <section className="space-y-4 border border-white/10 p-4">
         <h3 className="font-display text-xl text-gold">
-          Контакты и Яндекс.Карта
-          <FieldHelp text="Эти данные идут на страницу «Контакты»: адрес, заметка и карта. Координаты — центр карты и точка-маркер." />
+          Контакты и карта
+          <FieldHelp text="Адрес и телефон — на страницу «Контакты». Точку на карте можно выбрать кликом и подтвердить — координаты и адрес подставятся сами. На сайте останется Яндекс.Карта." />
         </h3>
 
-        <label className="block text-xs text-muted">
-          Адрес (как на сайте)
-          <FieldHelp text="Полный адрес клиники. Напишите на выбран выше, затем «Автоперевод»." />
+        <label className="block text-sm text-cream">
+          Адрес на сайте
+          <FieldHelp text="Текст адреса на странице контактов. Можно править вручную или подставить из карты кнопкой «Подтвердить точку»." />
           <input
             className="admin-input mt-1"
             placeholder="Ташкент, …"
@@ -1041,7 +1042,7 @@ function SiteForm({
 
         <label className="block text-xs text-muted">
           Заметка под телефоном
-          <FieldHelp text="Например: «Полный номер — в Instagram или боте»." />
+          <FieldHelp text="Например: «Записаться можно — в Telegram или Instagram»." />
           <input
             className="admin-input mt-1"
             placeholder="Как связаться"
@@ -1050,15 +1051,12 @@ function SiteForm({
           />
         </label>
 
-        <div className="border border-white/10 bg-white/[0.02] p-3">
+        <div className="border border-white/10 bg-white/[0.02] p-3 space-y-3">
           <p className="text-sm text-cream">
-            Яндекс.Карта
-            <FieldHelp text="Откройте maps.yandex.ru → найдите точку → ПКМ → «Что здесь?» → скопируйте широту и долготу." />
+            Точка на карте
+            <FieldHelp text="Кликните или перетащите метку, затем «Подтвердить точку». Широту/долготу можно править и вручную." />
           </p>
-          <p className="mt-1 text-[11px] leading-relaxed text-muted">
-            Формат: широта около 41.3, долгота около 69.2 (Ташкент). На карте слева — широта, справа — долгота.
-          </p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             <label className="block text-xs text-muted">
               Широта (lat)
               <input
@@ -1080,20 +1078,17 @@ function SiteForm({
               />
             </label>
           </div>
-          {Number(form.lat) && Number(form.lng) ? (
-            <div className="mt-3 aspect-[16/10] w-full overflow-hidden ring-1 ring-white/10">
-              <iframe
-                title="Yandex map preview"
-                className="h-full w-full border-0"
-                loading="lazy"
-                src={`https://yandex.ru/map-widget/v1/?ll=${form.lng}%2C${form.lat}&z=15&pt=${form.lng}%2C${form.lat},pm2rdm`}
-              />
-            </div>
-          ) : (
-            <p className="mt-3 text-xs text-sand">Укажите lat/lng — здесь появится превью карты.</p>
-          )}
+          <MapPicker
+            lat={Number(form.lat) || 41.33}
+            lng={Number(form.lng) || 69.28}
+            onConfirm={({ lat, lng, addressHint }) => {
+              set("lat", lat);
+              set("lng", lng);
+              if (addressHint) setDraftAddress(addressHint);
+            }}
+          />
           <a
-            className="mt-2 inline-block text-xs text-gold hover:underline"
+            className="inline-block text-xs text-gold hover:underline"
             href={`https://yandex.ru/maps/?ll=${form.lng}%2C${form.lat}&z=15&pt=${form.lng},${form.lat}`}
             target="_blank"
             rel="noreferrer"

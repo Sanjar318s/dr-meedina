@@ -360,6 +360,8 @@ export function createBot() {
       }
     }
   });
+
+  bot.callbackQuery(/^lang:(uz|ru|en)$/, async (ctx) => {
     const lang = ctx.match![1] as Lang;
     ctx.session.lang = lang;
     if (ctx.from) {

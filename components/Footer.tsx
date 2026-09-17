@@ -5,11 +5,10 @@ import { useTranslations } from "next-intl";
 type Props = {
   brand: string;
   instagram: string;
-  telegram: string;
   telegramBot?: string;
 };
 
-export function Footer({ brand, instagram, telegram, telegramBot }: Props) {
+export function Footer({ brand, instagram, telegramBot }: Props) {
   const t = useTranslations("footer");
   return (
     <footer className="border-t border-white/8 px-4 py-12">
@@ -23,9 +22,6 @@ export function Footer({ brand, instagram, telegram, telegramBot }: Props) {
         <div className="flex flex-wrap gap-5 text-sm text-muted">
           <a href={instagram} target="_blank" rel="noreferrer" className="transition hover:text-gold">
             Instagram
-          </a>
-          <a href={telegram} target="_blank" rel="noreferrer" className="transition hover:text-gold">
-            Telegram
           </a>
           {telegramBot && (
             <a href={telegramBot} target="_blank" rel="noreferrer" className="transition hover:text-gold">

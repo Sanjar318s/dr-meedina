@@ -1012,28 +1012,110 @@ function SiteForm({
         <input className="admin-input" placeholder="Tagline" value={draftTagline} onChange={(e) => setDraftTagline(e.target.value)} />
       </section>
 
-      <section className="space-y-3 border border-white/10 p-4">
+      <section className="space-y-4 border border-white/10 p-4">
         <h3 className="font-display text-xl text-gold">
-          Контакты
-          <FieldHelp text="Адрес, телефон и заметка. Координаты для карты." />
+          Контакты и Яндекс.Карта
+          <FieldHelp text="Эти данные идут на страницу «Контакты»: адрес, заметка и карта. Координаты — центр карты и точка-маркер." />
         </h3>
-        <input className="admin-input" placeholder="Адрес" value={draftAddress} onChange={(e) => setDraftAddress(e.target.value)} />
-        <input className="admin-input" placeholder="Телефон" value={String(form.phone ?? "")} onChange={(e) => set("phone", e.target.value)} />
-        <input className="admin-input" placeholder="Заметка к телефону" value={draftPhoneNote} onChange={(e) => setDraftPhoneNote(e.target.value)} />
-        <div className="grid gap-2 sm:grid-cols-2">
-          <input className="admin-input" type="number" step="any" placeholder="lat" value={Number(form.lat)} onChange={(e) => set("lat", Number(e.target.value))} />
-          <input className="admin-input" type="number" step="any" placeholder="lng" value={Number(form.lng)} onChange={(e) => set("lng", Number(e.target.value))} />
+
+        <label className="block text-xs text-muted">
+          Адрес (как на сайте)
+          <FieldHelp text="Полный адрес клиники. Напишите на выбран выше, затем «Автоперевод»." />
+          <input
+            className="admin-input mt-1"
+            placeholder="Ташкент, …"
+            value={draftAddress}
+            onChange={(e) => setDraftAddress(e.target.value)}
+          />
+        </label>
+
+        <label className="block text-xs text-muted">
+          Телефон
+          <input
+            className="admin-input mt-1"
+            placeholder="+998 …"
+            value={String(form.phone ?? "")}
+            onChange={(e) => set("phone", e.target.value)}
+          />
+        </label>
+
+        <label className="block text-xs text-muted">
+          Заметка под телефоном
+          <FieldHelp text="Например: «Полный номер — в Instagram или боте»." />
+          <input
+            className="admin-input mt-1"
+            placeholder="Как связаться"
+            value={draftPhoneNote}
+            onChange={(e) => setDraftPhoneNote(e.target.value)}
+          />
+        </label>
+
+        <div className="border border-white/10 bg-white/[0.02] p-3">
+          <p className="text-sm text-cream">
+            Яндекс.Карта
+            <FieldHelp text="Откройте maps.yandex.ru → найдите точку → ПКМ → «Что здесь?» → скопируйте широту и долготу." />
+          </p>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted">
+            Формат: широта около 41.3, долгота около 69.2 (Ташкент). На карте слева — широта, справа — долгота.
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="block text-xs text-muted">
+              Широта (lat)
+              <input
+                className="admin-input mt-1"
+                type="number"
+                step="any"
+                value={Number(form.lat) || 0}
+                onChange={(e) => set("lat", Number(e.target.value))}
+              />
+            </label>
+            <label className="block text-xs text-muted">
+              Долгота (lng)
+              <input
+                className="admin-input mt-1"
+                type="number"
+                step="any"
+                value={Number(form.lng) || 0}
+                onChange={(e) => set("lng", Number(e.target.value))}
+              />
+            </label>
+          </div>
+          {Number(form.lat) && Number(form.lng) ? (
+            <div className="mt-3 aspect-[16/10] w-full overflow-hidden ring-1 ring-white/10">
+              <iframe
+                title="Yandex map preview"
+                className="h-full w-full border-0"
+                loading="lazy"
+                src={`https://yandex.ru/map-widget/v1/?ll=${form.lng}%2C${form.lat}&z=15&pt=${form.lng}%2C${form.lat},pm2rdm`}
+              />
+            </div>
+          ) : (
+            <p className="mt-3 text-xs text-sand">Укажите lat/lng — здесь появится превью карты.</p>
+          )}
+          <a
+            className="mt-2 inline-block text-xs text-gold hover:underline"
+            href={`https://yandex.ru/maps/?ll=${form.lng}%2C${form.lat}&z=15&pt=${form.lng},${form.lat}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Открыть в Яндекс.Картах →
+          </a>
         </div>
       </section>
 
       <section className="space-y-2 border border-white/10 p-4">
         <h3 className="font-display text-xl text-gold">
           Ссылки
-          <FieldHelp text="Instagram, личный Telegram и ссылка на бота записи." />
+          <FieldHelp text="Instagram и ссылка на бота записи (кнопка «Бот записи»)." />
         </h3>
-        <input className="admin-input" value={String(form.instagram ?? "")} onChange={(e) => set("instagram", e.target.value)} />
-        <input className="admin-input" value={String(form.telegram ?? "")} onChange={(e) => set("telegram", e.target.value)} />
-        <input className="admin-input" value={String(form.telegramBot ?? "")} onChange={(e) => set("telegramBot", e.target.value)} />
+        <label className="block text-xs text-muted">
+          Instagram URL
+          <input className="admin-input mt-1" value={String(form.instagram ?? "")} onChange={(e) => set("instagram", e.target.value)} />
+        </label>
+        <label className="block text-xs text-muted">
+          Бот записи URL
+          <input className="admin-input mt-1" value={String(form.telegramBot ?? "")} onChange={(e) => set("telegramBot", e.target.value)} />
+        </label>
       </section>
 
       <button type="button" className="text-sm text-gold" onClick={() => void translateAll()}>

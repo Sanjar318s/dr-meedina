@@ -31,7 +31,6 @@ export default async function LocaleLayout({
         <Footer
           brand={settings.brand}
           instagram={settings.socials.instagram}
-          telegram={settings.socials.telegram}
           telegramBot={settings.socials.telegramBot}
         />
       </div>

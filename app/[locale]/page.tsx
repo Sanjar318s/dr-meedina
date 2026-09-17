@@ -196,14 +196,6 @@ export default async function HomePage({
                   >
                     Instagram @dr.meedina
                   </a>
-                  <a
-                    href={settings.socials.telegram}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="transition hover:text-gold"
-                  >
-                    t.me/drmeedina
-                  </a>
                 </div>
                 <div className="mt-10 flex flex-wrap gap-3">
                   <Link href="/booking" className="btn-primary">
@@ -213,17 +205,9 @@ export default async function HomePage({
                     href={settings.socials.telegramBot}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex border border-gold/60 bg-gold/15 px-7 py-3 text-xs uppercase tracking-[0.18em] text-gold transition hover:bg-gold hover:text-ink"
+                    className="inline-flex items-center justify-center border border-gold/60 bg-gold/15 px-7 py-3 text-center text-xs uppercase leading-none tracking-[0.18em] text-gold transition hover:bg-gold hover:text-ink"
                   >
                     {tc("bookBot")}
-                  </a>
-                  <a
-                    href={settings.socials.telegram}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex border border-white/30 px-7 py-3 text-xs uppercase tracking-[0.18em] text-pearl transition hover:border-white"
-                  >
-                    {tc("bot")}
                   </a>
                 </div>
               </div>

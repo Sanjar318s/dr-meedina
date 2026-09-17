@@ -45,6 +45,9 @@ export default async function ContactsPage({
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-gold">{t("phone")}</p>
+              {settings.phone && (
+                <p className="mt-2 text-lg text-cream">{settings.phone}</p>
+              )}
               <p className="mt-2 text-muted">{settings.phoneNote[loc]}</p>
             </div>
             <div className="flex flex-wrap gap-3 pt-2">
@@ -63,14 +66,6 @@ export default async function ContactsPage({
                 className="btn-primary"
               >
                 {t("bookBot")}
-              </a>
-              <a
-                href={settings.socials.telegram}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-ghost"
-              >
-                {t("bot")}
               </a>
             </div>
             <Link href="/booking" className="inline-block text-sm text-gold hover:text-cream">

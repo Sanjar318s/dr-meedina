@@ -7,6 +7,7 @@ import { addMinutes } from "date-fns";
 import { fromZonedTime } from "date-fns-tz";
 import { parse } from "date-fns";
 import { studioConfig } from "@/lib/studio-config";
+import { clearBookingTelegramCard } from "@/lib/telegram";
 
 async function requireAdmin() {
   const session = await getAdminSession();
@@ -95,6 +96,16 @@ export async function PATCH(req: NextRequest) {
     },
     include: { service: true, master: true },
   });
+
+  if (
+    data.status === "CONFIRMED" ||
+    data.status === "CANCELLED" ||
+    data.status === "SERVED" ||
+    data.tgHidden === true
+  ) {
+    await clearBookingTelegramCard(booking.id).catch(() => undefined);
+  }
+
   return NextResponse.json(booking);
 }
 
@@ -108,6 +119,7 @@ export async function DELETE(req: NextRequest) {
   const existing = await prisma.booking.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
+  await clearBookingTelegramCard(id).catch(() => undefined);
   await prisma.booking.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

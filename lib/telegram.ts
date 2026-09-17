@@ -129,7 +129,6 @@ export async function editTelegramMessage(
     }),
   });
   if (!res.ok) {
-    // Fallback: at least strip buttons if text edit fails (e.g. identical)
     await fetch(`https://api.telegram.org/bot${token}/editMessageReplyMarkup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -139,6 +138,33 @@ export async function editTelegramMessage(
         reply_markup: replyMarkup || { inline_keyboard: [] },
       }),
     }).catch(() => undefined);
+  }
+}
+
+export async function deleteTelegramMessage(chatId: string | number, messageId: number) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return false;
+  const res = await fetch(`https://api.telegram.org/bot${token}/deleteMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, message_id: messageId }),
+  });
+  return res.ok;
+}
+
+/** Delete stored admin notify message after actions are done */
+export async function clearBookingTelegramCard(bookingId: string) {
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking?.tgNotifyChatId || !booking.tgNotifyMsgId) return;
+
+  await deleteTelegramMessage(booking.tgNotifyChatId, booking.tgNotifyMsgId);
+  try {
+    await prisma.booking.update({
+      where: { id: bookingId },
+      data: { tgNotifyChatId: null, tgNotifyMsgId: null },
+    });
+  } catch {
+    /* booking may already be deleted */
   }
 }
 
@@ -174,13 +200,27 @@ export async function notifyAdminNewBooking(booking: BookingLike) {
   }
 }
 
-/** Refresh admin Telegram card after status/QR change (real-time) */
+/**
+ * After status change: delete card when action is finished
+ * (accepted / declined / served / forgotten), otherwise refresh text+buttons.
+ */
 export async function refreshBookingTelegramCard(bookingId: string) {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: { service: true, master: true },
   });
   if (!booking?.tgNotifyChatId || !booking.tgNotifyMsgId) return;
+
+  const done =
+    booking.status === "CONFIRMED" ||
+    booking.status === "CANCELLED" ||
+    booking.status === "SERVED" ||
+    booking.tgHidden;
+
+  if (done) {
+    await clearBookingTelegramCard(bookingId);
+    return;
+  }
 
   await editTelegramMessage(
     booking.tgNotifyChatId,

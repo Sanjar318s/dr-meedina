@@ -3,7 +3,7 @@ import type { Context, SessionFlavor } from "grammy";
 import { format, addDays } from "date-fns";
 import { prisma } from "../lib/prisma";
 import { createBooking, getAvailableSlots, cancelBooking } from "../lib/booking/slots";
-import { notifyAdminNewBooking, formatQrStatusAlert, refreshBookingTelegramCard } from "../lib/telegram";
+import { notifyAdminNewBooking, formatQrStatusAlert, refreshBookingTelegramCard, clearBookingTelegramCard } from "../lib/telegram";
 import { getSiteSettings } from "../lib/site-settings";
 import { getScheduleSettings, isWorkingDay } from "../lib/schedule";
 import { isAdmin, touchBotUser } from "../lib/bot-users";
@@ -455,10 +455,16 @@ export function createBot() {
       where: { id },
       data: { status: status as "CONFIRMED" | "CANCELLED" },
     });
-    await refreshBookingTelegramCard(id);
     await ctx.answerCallbackQuery({
       text: status === "CONFIRMED" ? "Принята" : "Отклонена",
     });
+    // Finished action → delete notify message
+    await clearBookingTelegramCard(id);
+    try {
+      await ctx.deleteMessage();
+    } catch {
+      /* notify card already cleared, or this is a list message */
+    }
   });
 
   bot.callbackQuery(/^bcheckin:(.+)$/, async (ctx) => {
@@ -469,26 +475,39 @@ export function createBot() {
       await ctx.answerCallbackQuery({ text: "Не найдено", show_alert: true });
       return;
     }
-    // Only show QR status — never mark SERVED from this button
     await ctx.answerCallbackQuery({
       text: formatQrStatusAlert(booking),
       show_alert: true,
     });
-    // Refresh card if already SERVED (hide buttons) or status text changed
-    await refreshBookingTelegramCard(id);
+    if (booking.status === "SERVED") {
+      await clearBookingTelegramCard(id);
+      try {
+        await ctx.deleteMessage();
+      } catch {
+        /* ignore */
+      }
+    } else {
+      await refreshBookingTelegramCard(id);
+    }
   });
 
   bot.callbackQuery(/^bforget:(.+)$/, async (ctx) => {
     if (!isAdmin(ctx.from?.id)) return;
+    const id = ctx.match![1];
     await prisma.booking.update({
-      where: { id: ctx.match![1] },
+      where: { id },
       data: { tgHidden: true },
     });
     await ctx.answerCallbackQuery({ text: "Скрыто" });
+    await clearBookingTelegramCard(id);
     try {
       await ctx.deleteMessage();
     } catch {
-      await ctx.editMessageReplyMarkup({ reply_markup: undefined });
+      try {
+        await ctx.editMessageReplyMarkup({ reply_markup: undefined });
+      } catch {
+        /* ignore */
+      }
     }
   });
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
+import { clearBookingTelegramCard } from "@/lib/telegram";
 
 /** One-time QR check-in: marks booking SERVED */
 export async function POST(req: NextRequest) {
@@ -9,7 +10,6 @@ export async function POST(req: NextRequest) {
   const token = (body.token as string) || req.nextUrl.searchParams.get("token");
   if (!token) return NextResponse.json({ error: "TOKEN_REQUIRED" }, { status: 400 });
 
-  // Allow admin session OR secret query for TG deep-link style
   const secret = process.env.CHECKIN_SECRET;
   const providedSecret = (body.secret as string) || req.nextUrl.searchParams.get("secret");
   if (!admin && (!secret || providedSecret !== secret)) {
@@ -33,6 +33,9 @@ export async function POST(req: NextRequest) {
     data: { status: "SERVED", servedAt: new Date() },
     include: { service: true, master: true },
   });
+
+  await clearBookingTelegramCard(updated.id).catch(() => undefined);
+
   return NextResponse.json({ ok: true, booking: updated });
 }
 

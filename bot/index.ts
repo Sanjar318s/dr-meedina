@@ -478,26 +478,33 @@ export function createBot() {
   });
 
   bot.callbackQuery(/^bstatus:(.+):(CONFIRMED|CANCELLED)$/, async (ctx) => {
-    if (!isAdmin(ctx.from?.id)) return;
+    if (!isAdmin(ctx.from?.id)) {
+      await ctx.answerCallbackQuery({ text: "Нет доступа", show_alert: true });
+      return;
+    }
     const [, id, status] = ctx.match!;
-    await prisma.booking.update({
-      where: { id },
-      data: { status: status as "CONFIRMED" | "CANCELLED" },
-    });
-    await ctx.answerCallbackQuery({
-      text: status === "CONFIRMED" ? "Принята" : "Отклонена",
-    });
-    // Finished action → delete notify message
-    await clearBookingTelegramCard(id);
     try {
-      await ctx.deleteMessage();
-    } catch {
-      /* notify card already cleared, or this is a list message */
+      await prisma.booking.update({
+        where: { id },
+        data: { status: status as "CONFIRMED" | "CANCELLED" },
+      });
+      await ctx.answerCallbackQuery({
+        text: status === "CONFIRMED" ? "Принята ✓" : "Отклонена",
+        show_alert: true,
+      });
+      await clearBookingTelegramCard(id);
+      await adminBookings(ctx);
+    } catch (e) {
+      console.error("bstatus failed", e);
+      await ctx.answerCallbackQuery({ text: "Ошибка сохранения", show_alert: true });
     }
   });
 
   bot.callbackQuery(/^bcheckin:(.+)$/, async (ctx) => {
-    if (!isAdmin(ctx.from?.id)) return;
+    if (!isAdmin(ctx.from?.id)) {
+      await ctx.answerCallbackQuery({ text: "Нет доступа", show_alert: true });
+      return;
+    }
     const id = ctx.match![1];
     const booking = await prisma.booking.findUnique({ where: { id } });
     if (!booking) {
@@ -510,18 +517,17 @@ export function createBot() {
     });
     if (booking.status === "SERVED") {
       await clearBookingTelegramCard(id);
-      try {
-        await ctx.deleteMessage();
-      } catch {
-        /* ignore */
-      }
+      await adminBookings(ctx);
     } else {
       await refreshBookingTelegramCard(id);
     }
   });
 
   bot.callbackQuery(/^bforget:(.+)$/, async (ctx) => {
-    if (!isAdmin(ctx.from?.id)) return;
+    if (!isAdmin(ctx.from?.id)) {
+      await ctx.answerCallbackQuery({ text: "Нет доступа", show_alert: true });
+      return;
+    }
     const id = ctx.match![1];
     await prisma.booking.update({
       where: { id },
@@ -529,15 +535,7 @@ export function createBot() {
     });
     await ctx.answerCallbackQuery({ text: "Скрыто" });
     await clearBookingTelegramCard(id);
-    try {
-      await ctx.deleteMessage();
-    } catch {
-      try {
-        await ctx.editMessageReplyMarkup({ reply_markup: undefined });
-      } catch {
-        /* ignore */
-      }
-    }
+    await adminBookings(ctx);
   });
 
   bot.callbackQuery("news:toggle", async (ctx) => {
@@ -726,15 +724,18 @@ export function createBot() {
       let text = `<b>📋 Записи (${list.length})</b>\n━━━━━━━━━━━━\n`;
       const kb = new InlineKeyboard();
       for (const b of list.slice(0, 10)) {
+        const when = format(b.startsAt, "dd.MM HH:mm");
+        const statusLabel =
+          b.status === "PENDING" ? "ожидает" : b.status === "CONFIRMED" ? "принята" : b.status;
         text +=
-          `\n<b>${format(b.startsAt, "dd.MM HH:mm")}</b> · ${b.status}\n` +
+          `\n<b>${when}</b> · ${statusLabel}\n` +
           `👤 ${b.clientName}\n📞 ${b.clientPhone}\n💅 ${b.service.nameRu} · ${b.master.name}\n`;
         if (b.status === "PENDING") {
-          kb.text(`✅ ${format(b.startsAt, "dd.MM HH:mm")}`, `bstatus:${b.id}:CONFIRMED`)
-            .text("❌", `bstatus:${b.id}:CANCELLED`)
+          kb.text(`✅ Принять ${when}`, `bstatus:${b.id}:CONFIRMED`)
+            .text("❌ Отклонить", `bstatus:${b.id}:CANCELLED`)
             .row();
         } else {
-          kb.text(`${format(b.startsAt, "dd.MM HH:mm")} ✓`, "noop")
+          kb.text(`✔ Check-in ${when}`, `bcheckin:${b.id}`)
             .text("Забыть", `bforget:${b.id}`)
             .row();
         }

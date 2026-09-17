@@ -70,13 +70,14 @@ export function bookingNotifyKeyboard(booking: { id: string; status?: string }) 
   const rows: { text: string; callback_data: string }[][] = [];
   if (status === "PENDING") {
     rows.push([
-      { text: "✅ Принят", callback_data: `bstatus:${booking.id}:CONFIRMED` },
-      { text: "❌ Отклонён", callback_data: `bstatus:${booking.id}:CANCELLED` },
+      { text: "✅ Принять", callback_data: `bstatus:${booking.id}:CONFIRMED` },
+      { text: "❌ Отклонить", callback_data: `bstatus:${booking.id}:CANCELLED` },
     ]);
-  } else if (status === "CONFIRMED") {
-    rows.push([{ text: "Уже принята", callback_data: "noop" }]);
   }
   rows.push([{ text: "✔ Check-in", callback_data: `bcheckin:${booking.id}` }]);
+  if (status === "CONFIRMED") {
+    rows.push([{ text: "Забыть", callback_data: `bforget:${booking.id}` }]);
+  }
   return { inline_keyboard: rows };
 }
 

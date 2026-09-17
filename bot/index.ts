@@ -3,8 +3,9 @@ import type { Context, SessionFlavor } from "grammy";
 import { format, addDays } from "date-fns";
 import { prisma } from "../lib/prisma";
 import { createBooking, getAvailableSlots, cancelBooking } from "../lib/booking/slots";
-import { notifyAdmin } from "../lib/telegram";
+import { notifyAdminNewBooking } from "../lib/telegram";
 import { getSiteSettings } from "../lib/site-settings";
+import { getScheduleSettings, isWorkingDay } from "../lib/schedule";
 import { isAdmin, touchBotUser } from "../lib/bot-users";
 import { broadcastNews } from "../lib/bot-broadcast";
 
@@ -19,8 +20,10 @@ type SessionData = {
   time?: string;
   name?: string;
   phone?: string;
-  adminNewsDraft?: string;
   adminPriceServiceId?: string;
+  newsPhotos?: string[];
+  newsText?: string;
+  tickerDraft?: string;
 };
 
 type BotContext = Context & SessionFlavor<SessionData>;
@@ -49,9 +52,10 @@ const T = {
     sub: "Yangiliklarga obuna",
     adminBookings: "📋 Yozuvlar",
     adminPrices: "💰 Narxlar",
-    adminNews: "📢 Yangilik yuborish",
+    adminNews: "📰 Yangiliklar",
     adminStats: "📊 Statistika",
     back: "◀️ Orqaga",
+    dayOff: "Dam olish kuni",
   },
   ru: {
     welcome: "<b>Dr.Meedina</b>\nЧистая кожа — твоя уверенность.\n\nВыберите пункт меню:",
@@ -76,9 +80,10 @@ const T = {
     sub: "Подписаться на новости",
     adminBookings: "📋 Записи",
     adminPrices: "💰 Цены",
-    adminNews: "📢 Новая новость",
+    adminNews: "📰 Новости",
     adminStats: "📊 Статистика",
     back: "◀️ Назад",
+    dayOff: "Выходной",
   },
   en: {
     welcome: "<b>Dr.Meedina</b>\nClear skin is your confidence.\n\nChoose from the menu:",
@@ -103,9 +108,10 @@ const T = {
     sub: "Subscribe to news",
     adminBookings: "📋 Bookings",
     adminPrices: "💰 Prices",
-    adminNews: "📢 New post",
+    adminNews: "📰 News",
     adminStats: "📊 Stats",
     back: "◀️ Back",
+    dayOff: "Day off",
   },
 } as const;
 
@@ -124,12 +130,7 @@ function serviceName(s: { nameUz: string; nameRu: string; nameEn: string }, lang
 
 function mainKeyboard(lang: Lang, admin: boolean) {
   const t = T[lang];
-  const kb = new Keyboard()
-    .text(t.book)
-    .text(t.my)
-    .row()
-    .text(t.news)
-    .text(t.lang);
+  const kb = new Keyboard().text(t.book).text(t.my).row().text(t.news).text(t.lang);
   if (admin) kb.row().text(t.admin);
   return kb.resized().persistent();
 }
@@ -147,12 +148,29 @@ function adminKeyboard(lang: Lang) {
     .resized();
 }
 
+async function translateSimple(text: string, from: Lang): Promise<{ uz: string; ru: string; en: string }> {
+  const map: Record<Lang, string> = { ru: "ru", uz: "uz", en: "en" };
+  const targets = (["ru", "uz", "en"] as Lang[]).filter((l) => l !== from);
+  const out: Record<string, string> = { [from]: text };
+  for (const to of targets) {
+    try {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.slice(0, 450))}&langpair=${map[from]}|${map[to]}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      out[to] = data?.responseData?.translatedText || text;
+    } catch {
+      out[to] = text;
+    }
+  }
+  return { uz: out.uz || text, ru: out.ru || text, en: out.en || text };
+}
+
 export function createBot() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) throw new Error("TELEGRAM_BOT_TOKEN is required");
 
   const bot = new Bot<BotContext>(token);
-  bot.use(session({ initial: (): SessionData => ({ lang: "ru" }) }));
+  bot.use(session({ initial: (): SessionData => ({ lang: "ru", newsPhotos: [] }) }));
 
   async function greet(ctx: BotContext) {
     if (!ctx.from) return;
@@ -175,6 +193,21 @@ export function createBot() {
   }
 
   bot.command("start", greet);
+
+  bot.on("message:photo", async (ctx) => {
+    if (!ctx.from || !isAdmin(ctx.from.id)) return;
+    if (ctx.session.step !== "admin_news_photo") return;
+    const photos = ctx.message.photo;
+    const best = photos[photos.length - 1];
+    // Store Telegram file_id (works for broadcast without public URL)
+    ctx.session.newsPhotos = [...(ctx.session.newsPhotos || []), best.file_id];
+    const kb = new InlineKeyboard()
+      .text("Готово →", "anews:photos_done")
+      .text("Без фото", "anews:no_photo");
+    await ctx.reply(`Фото добавлено (${ctx.session.newsPhotos.length}). Ещё или далее?`, {
+      reply_markup: kb,
+    });
+  });
 
   bot.on("message:text", async (ctx) => {
     if (!ctx.from) return;
@@ -213,7 +246,7 @@ export function createBot() {
     }
 
     if (admin && text === t.admin) {
-      await ctx.reply("Admin menu", { reply_markup: adminKeyboard(lang) });
+      await ctx.reply("Админ-меню", { reply_markup: adminKeyboard(lang) });
       return;
     }
 
@@ -228,8 +261,13 @@ export function createBot() {
     }
 
     if (admin && text === t.adminNews) {
-      ctx.session.step = "admin_news";
-      await ctx.reply("Отправьте текст новости:");
+      const kb = new InlineKeyboard()
+        .text("📢 Рассылка", "anews:broadcast")
+        .row()
+        .text("✨ Строка на сайт", "anews:ticker")
+        .row()
+        .text("📋 Список", "anews:list");
+      await ctx.reply("📰 <b>Новости</b>\nЧто сделаем?", { parse_mode: "HTML", reply_markup: kb });
       return;
     }
 
@@ -238,13 +276,24 @@ export function createBot() {
       return;
     }
 
-    if (ctx.session.step === "admin_news" && admin) {
-      const post = await prisma.newsPost.create({
-        data: { text, createdBy: String(ctx.from.id) },
+    if (ctx.session.step === "admin_news_text" && admin) {
+      ctx.session.newsText = text;
+      ctx.session.step = "admin_news_confirm";
+      const kb = new InlineKeyboard().text("✅ Отправить", "anews:send").text("❌ Отмена", "anews:cancel");
+      const n = ctx.session.newsPhotos?.length || 0;
+      await ctx.reply(`Превью:\n${n ? `📷 ${n} фото\n` : ""}${text}\n\nОтправить всем?`, {
+        reply_markup: kb,
       });
-      const result = await broadcastNews(post.id);
+      return;
+    }
+
+    if (ctx.session.step === "admin_ticker" && admin) {
+      const texts = await translateSimple(text.slice(0, 80), "ru");
+      await prisma.tickerItem.create({
+        data: { textUz: texts.uz, textRu: texts.ru, textEn: texts.en, isActive: true },
+      });
       ctx.session.step = undefined;
-      await ctx.reply(`Новость отправлена: ${result.sent} пользователей`);
+      await ctx.reply("✨ Добавлено на сайт (дорожка новостей)");
       return;
     }
 
@@ -326,6 +375,11 @@ export function createBot() {
   bot.callbackQuery(/^date:(.+)$/, async (ctx) => {
     ctx.session.date = ctx.match![1];
     await ctx.answerCallbackQuery();
+    const schedule = await getScheduleSettings();
+    if (!isWorkingDay(ctx.session.date, schedule)) {
+      await ctx.reply(T[ctx.session.lang].dayOff);
+      return;
+    }
     const slots = await getAvailableSlots({
       masterId: ctx.session.masterId!,
       date: ctx.session.date,
@@ -371,9 +425,7 @@ export function createBot() {
         source: "BOT",
       });
       await touchBotUser(ctx.from!, "book", { bookingId: booking.id });
-      await notifyAdmin(
-        `Новая запись (BOT)\n${ctx.session.name} ${ctx.session.phone}\n${ctx.session.date} ${ctx.session.time}`,
-      );
+      await notifyAdminNewBooking(booking);
       ctx.session.step = undefined;
       await ctx.reply(T[ctx.session.lang].done);
     } catch {
@@ -403,8 +455,45 @@ export function createBot() {
       where: { id },
       data: { status: status as "CONFIRMED" | "CANCELLED" },
     });
-    await ctx.answerCallbackQuery({ text: status });
-    await ctx.editMessageReplyMarkup({ reply_markup: undefined });
+    await ctx.answerCallbackQuery({ text: status === "CONFIRMED" ? "Принят" : "Отклонён" });
+    try {
+      await ctx.editMessageReplyMarkup({ reply_markup: undefined });
+    } catch {
+      /* ignore */
+    }
+  });
+
+  bot.callbackQuery(/^bcheckin:(.+)$/, async (ctx) => {
+    if (!isAdmin(ctx.from?.id)) return;
+    const id = ctx.match![1];
+    const booking = await prisma.booking.findUnique({ where: { id } });
+    if (!booking) {
+      await ctx.answerCallbackQuery({ text: "Не найдено" });
+      return;
+    }
+    if (booking.status === "SERVED") {
+      await ctx.answerCallbackQuery({ text: "Уже SERVED" });
+      return;
+    }
+    await prisma.booking.update({
+      where: { id },
+      data: { status: "SERVED", servedAt: new Date() },
+    });
+    await ctx.answerCallbackQuery({ text: "Check-in ✓" });
+  });
+
+  bot.callbackQuery(/^bforget:(.+)$/, async (ctx) => {
+    if (!isAdmin(ctx.from?.id)) return;
+    await prisma.booking.update({
+      where: { id: ctx.match![1] },
+      data: { tgHidden: true },
+    });
+    await ctx.answerCallbackQuery({ text: "Скрыто" });
+    try {
+      await ctx.deleteMessage();
+    } catch {
+      await ctx.editMessageReplyMarkup({ reply_markup: undefined });
+    }
   });
 
   bot.callbackQuery("news:toggle", async (ctx) => {
@@ -415,6 +504,83 @@ export function createBot() {
     await prisma.botUser.update({ where: { id: user.id }, data: { subscribedNews: next } });
     await ctx.answerCallbackQuery();
     await ctx.reply(next ? T[ctx.session.lang].sub : T[ctx.session.lang].unsub);
+  });
+
+  bot.callbackQuery("anews:broadcast", async (ctx) => {
+    if (!isAdmin(ctx.from?.id)) return;
+    ctx.session.step = "admin_news_photo";
+    ctx.session.newsPhotos = [];
+    ctx.session.newsText = undefined;
+    await ctx.answerCallbackQuery();
+    const kb = new InlineKeyboard().text("Без фото", "anews:no_photo");
+    await ctx.reply("📷 Пришлите фото для рассылки (можно несколько), или «Без фото»", {
+      reply_markup: kb,
+    });
+  });
+
+  bot.callbackQuery("anews:no_photo", async (ctx) => {
+    if (!isAdmin(ctx.from?.id)) return;
+    ctx.session.newsPhotos = [];
+    ctx.session.step = "admin_news_text";
+    await ctx.answerCallbackQuery();
+    await ctx.reply("✍️ Напишите текст рассылки (подпись):");
+  });
+
+  bot.callbackQuery("anews:photos_done", async (ctx) => {
+    if (!isAdmin(ctx.from?.id)) return;
+    ctx.session.step = "admin_news_text";
+    await ctx.answerCallbackQuery();
+    await ctx.reply("✍️ Напишите текст рассылки (подпись к фото):");
+  });
+
+  bot.callbackQuery("anews:send", async (ctx) => {
+    if (!isAdmin(ctx.from?.id)) return;
+    await ctx.answerCallbackQuery();
+    const photos = ctx.session.newsPhotos || [];
+    const text = ctx.session.newsText || "";
+    const post = await prisma.newsPost.create({
+      data: {
+        text,
+        imageUrl: photos[0] || null,
+        imageUrls: photos.length ? JSON.stringify(photos) : null,
+        createdBy: String(ctx.from!.id),
+      },
+    });
+    const result = await broadcastNews(post.id);
+    ctx.session.step = undefined;
+    ctx.session.newsPhotos = [];
+    ctx.session.newsText = undefined;
+    await ctx.reply(`✅ Отправлено ${result.sent} подписчикам`);
+  });
+
+  bot.callbackQuery("anews:cancel", async (ctx) => {
+    ctx.session.step = undefined;
+    ctx.session.newsPhotos = [];
+    await ctx.answerCallbackQuery();
+    await ctx.reply("Отменено");
+  });
+
+  bot.callbackQuery("anews:ticker", async (ctx) => {
+    if (!isAdmin(ctx.from?.id)) return;
+    ctx.session.step = "admin_ticker";
+    await ctx.answerCallbackQuery();
+    await ctx.reply("✨ Пришлите короткий текст для дорожки на сайте (до ~80 символов):");
+  });
+
+  bot.callbackQuery("anews:list", async (ctx) => {
+    if (!isAdmin(ctx.from?.id)) return;
+    await ctx.answerCallbackQuery();
+    const [posts, ticks] = await Promise.all([
+      prisma.newsPost.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
+      prisma.tickerItem.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
+    ]);
+    let msg = "<b>Рассылки:</b>\n";
+    msg +=
+      posts.map((p) => `• ${format(p.createdAt, "dd.MM")} ${p.broadcast ? "✅" : "·"} ${p.text.slice(0, 40)}`).join("\n") ||
+      "—";
+    msg += "\n\n<b>Дорожка:</b>\n";
+    msg += ticks.map((t) => `• ${t.isActive ? "🟢" : "⚪"} ${t.textRu}`).join("\n") || "—";
+    await ctx.reply(msg, { parse_mode: "HTML" });
   });
 
   async function startBook(ctx: BotContext) {
@@ -431,12 +597,16 @@ export function createBot() {
 
   async function askDates(ctx: BotContext) {
     const lang = ctx.session.lang;
+    const schedule = await getScheduleSettings();
     const kb = new InlineKeyboard();
-    for (let i = 0; i < 7; i++) {
+    let shown = 0;
+    for (let i = 0; i < 21 && shown < 10; i++) {
       const d = addDays(new Date(), i);
       const key = format(d, "yyyy-MM-dd");
+      if (!isWorkingDay(key, schedule)) continue;
       kb.text(format(d, "dd.MM"), `date:${key}`);
-      if ((i + 1) % 4 === 0) kb.row();
+      shown += 1;
+      if (shown % 4 === 0) kb.row();
     }
     ctx.session.step = "date";
     await ctx.reply(T[lang].chooseDate, { reply_markup: kb });
@@ -467,13 +637,17 @@ export function createBot() {
 
   async function showNews(ctx: BotContext) {
     await touchBotUser(ctx.from!, "news_open");
-    const posts = await prisma.newsPost.findMany({ orderBy: { createdAt: "desc" }, take: 5 });
+    const posts = await prisma.newsPost.findMany({
+      where: { broadcast: true },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    });
     const kb = new InlineKeyboard().text(
       T[ctx.session.lang].unsub + " / " + T[ctx.session.lang].sub,
       "news:toggle",
     );
     if (!posts.length) {
-      await ctx.reply("—", { reply_markup: kb });
+      await ctx.reply("Пока нет новостей", { reply_markup: kb });
       return;
     }
     for (const p of posts) {
@@ -483,23 +657,31 @@ export function createBot() {
   }
 
   async function adminBookings(ctx: BotContext) {
+    const now = new Date();
     const list = await prisma.booking.findMany({
-      where: { status: "PENDING" },
+      where: {
+        status: { in: ["PENDING", "CONFIRMED"] },
+        tgHidden: false,
+        startsAt: { gte: new Date(now.getTime() - 12 * 60 * 60 * 1000) },
+      },
       include: { service: true, master: true },
       orderBy: { startsAt: "asc" },
-      take: 10,
+      take: 15,
     });
     if (!list.length) {
-      await ctx.reply("Нет PENDING записей");
+      await ctx.reply("Нет записей");
       return;
     }
     for (const b of list) {
-      const kb = new InlineKeyboard()
-        .text("✅", `bstatus:${b.id}:CONFIRMED`)
-        .text("❌", `bstatus:${b.id}:CANCELLED`);
+      const kb = new InlineKeyboard();
+      if (b.status === "PENDING") {
+        kb.text("✅ Принят", `bstatus:${b.id}:CONFIRMED`).text("❌ Отклонён", `bstatus:${b.id}:CANCELLED`);
+      } else {
+        kb.text("Уже принята", "noop").text("Забыть", `bforget:${b.id}`);
+      }
       await ctx.reply(
-        `${format(b.startsAt, "dd.MM HH:mm")} · ${b.clientName}\n${b.service.nameRu} · ${b.master.name}`,
-        { reply_markup: kb },
+        `<b>${format(b.startsAt, "dd.MM HH:mm")}</b> · ${b.status}\n👤 ${b.clientName}\n📞 ${b.clientPhone}\n💅 ${b.service.nameRu} · ${b.master.name}`,
+        { parse_mode: "HTML", reply_markup: kb },
       );
     }
   }
@@ -532,6 +714,10 @@ export function createBot() {
       .join("\n");
     await ctx.reply(`👥 Всего: ${total}\n🔥 Активны 7д: ${active}\n\n${lines || "—"}`);
   }
+
+  bot.callbackQuery("noop", async (ctx) => {
+    await ctx.answerCallbackQuery();
+  });
 
   return bot;
 }

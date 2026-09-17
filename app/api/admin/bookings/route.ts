@@ -54,9 +54,10 @@ export async function GET(req: NextRequest) {
 
 const patchSchema = z.object({
   id: z.string(),
-  status: z.enum(["PENDING", "CONFIRMED", "CANCELLED"]).optional(),
+  status: z.enum(["PENDING", "CONFIRMED", "CANCELLED", "SERVED"]).optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   time: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+  tgHidden: z.boolean().optional(),
 });
 
 export async function PATCH(req: NextRequest) {
@@ -89,6 +90,8 @@ export async function PATCH(req: NextRequest) {
       status: data.status,
       startsAt,
       endsAt,
+      tgHidden: data.tgHidden,
+      ...(data.status === "SERVED" ? { servedAt: new Date() } : {}),
     },
     include: { service: true, master: true },
   });

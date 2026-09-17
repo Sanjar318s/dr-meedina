@@ -48,6 +48,7 @@ export function BookingWizard() {
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
   const [skipMaster, setSkipMaster] = useState(false);
+  const [dayOff, setDayOff] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -72,13 +73,18 @@ export function BookingWizard() {
   useEffect(() => {
     if (!masterId || !date || !serviceId) {
       setSlots([]);
+      setDayOff(false);
       return;
     }
     setLoadingSlots(true);
     setTime("");
     fetch(`/api/slots?masterId=${masterId}&date=${date}&serviceId=${serviceId}`)
       .then((r) => r.json())
-      .then((data) => setSlots(Array.isArray(data.slots) ? data.slots : []))
+      .then((data) => {
+        const list = Array.isArray(data.slots) ? data.slots : [];
+        setSlots(list);
+        setDayOff(list.length === 0);
+      })
       .finally(() => setLoadingSlots(false));
   }, [masterId, date, serviceId]);
 
@@ -297,7 +303,7 @@ export function BookingWizard() {
                 {loadingSlots ? (
                   <p className="mt-3 text-muted">…</p>
                 ) : slots.length === 0 && date ? (
-                  <p className="mt-3 text-muted">{t("noSlots")}</p>
+                  <p className="mt-3 text-muted">{dayOff ? t("noSlots") : t("noSlots")}</p>
                 ) : (
                   <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
                     {slots.map((slot) => (

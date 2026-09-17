@@ -17,22 +17,30 @@ export async function GET() {
 const schema = z.object({
   text: z.string().min(1),
   imageUrl: z.string().optional().nullable(),
+  imageUrls: z.array(z.string()).optional(),
   broadcast: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest) {
   if (!(await guard())) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   const data = schema.parse(await req.json());
+  const urls = data.imageUrls?.length
+    ? data.imageUrls
+    : data.imageUrl
+      ? [data.imageUrl]
+      : [];
   const post = await prisma.newsPost.create({
     data: {
       text: data.text,
-      imageUrl: data.imageUrl || null,
+      imageUrl: urls[0] || null,
+      imageUrls: urls.length ? JSON.stringify(urls) : null,
       createdBy: "admin",
       broadcast: false,
     },
   });
   if (data.broadcast) {
-    await broadcastNews(post.id);
+    const result = await broadcastNews(post.id);
+    return NextResponse.json({ ...post, broadcastResult: result });
   }
   return NextResponse.json(post);
 }

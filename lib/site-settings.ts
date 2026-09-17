@@ -16,6 +16,11 @@ export type SiteSettingsView = {
   };
   tagline: Record<AppLocale, string>;
   welcomeImageUrl: string;
+  heroVideoUrl: string | null;
+  heroHeadline: Record<AppLocale, string>;
+  heroSub: Record<AppLocale, string>;
+  aboutTitle: Record<AppLocale, string>;
+  aboutText: Record<AppLocale, string>;
 };
 
 function fromDefaults(): SiteSettingsView {
@@ -34,6 +39,23 @@ function fromDefaults(): SiteSettingsView {
     },
     tagline: { ...studioConfig.tagline },
     welcomeImageUrl: studioConfig.welcomeImageUrl,
+    heroVideoUrl: process.env.NEXT_PUBLIC_HERO_VIDEO_URL || null,
+    heroHeadline: { ...studioConfig.tagline },
+    heroSub: {
+      uz: "Tibbiy ma'lumotli kosmetolog. Har bir mijozga individual yondashuv.",
+      ru: "Косметолог с медицинским образованием. Индивидуальный подход каждому.",
+      en: "A cosmetologist with medical education. Personalized care for every patient.",
+    },
+    aboutTitle: {
+      uz: "Dr.Meedina haqida",
+      ru: "О Dr.Meedina",
+      en: "About Dr.Meedina",
+    },
+    aboutText: {
+      uz: "Men Madina — tibbiy ma'lumotli shifokor-kosmetologman.",
+      ru: "Меня зовут Мадина — я врач-косметолог с медицинским образованием.",
+      en: "I'm Madina — a cosmetologist with medical education.",
+    },
   };
 }
 
@@ -64,6 +86,27 @@ export async function getSiteSettings(): Promise<SiteSettingsView> {
         en: row.taglineEn,
       },
       welcomeImageUrl: row.welcomeImageUrl || studioConfig.welcomeImageUrl,
+      heroVideoUrl: row.heroVideoUrl || process.env.NEXT_PUBLIC_HERO_VIDEO_URL || null,
+      heroHeadline: {
+        uz: row.heroHeadlineUz,
+        ru: row.heroHeadlineRu,
+        en: row.heroHeadlineEn,
+      },
+      heroSub: {
+        uz: row.heroSubUz,
+        ru: row.heroSubRu,
+        en: row.heroSubEn,
+      },
+      aboutTitle: {
+        uz: row.aboutTitleUz,
+        ru: row.aboutTitleRu,
+        en: row.aboutTitleEn,
+      },
+      aboutText: {
+        uz: row.aboutTextUz,
+        ru: row.aboutTextRu,
+        en: row.aboutTextEn,
+      },
     };
   } catch {
     return fromDefaults();
@@ -75,6 +118,17 @@ export function parseGallery(gallery: string | null | undefined): string[] {
   try {
     const parsed = JSON.parse(gallery);
     return Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getActiveTicker() {
+  try {
+    return await prisma.tickerItem.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+    });
   } catch {
     return [];
   }

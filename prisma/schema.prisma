@@ -11,6 +11,7 @@ enum BookingStatus {
   PENDING
   CONFIRMED
   CANCELLED
+  SERVED
 }
 
 enum BookingSource {
@@ -29,7 +30,7 @@ model Service {
   durationMinutes Int
   price           Int
   imageUrl        String?
-  gallery         String? // JSON array of image URLs
+  gallery         String?
   videoUrl        String?
   category        String
   isActive        Boolean   @default(true)
@@ -65,6 +66,9 @@ model Booking {
   endsAt           DateTime
   status           BookingStatus @default(PENDING)
   source           BookingSource
+  checkToken       String        @unique @default(cuid())
+  servedAt         DateTime?
+  tgHidden         Boolean       @default(false)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   service          Service       @relation(fields: [serviceId], references: [id])
@@ -73,6 +77,7 @@ model Booking {
   @@index([masterId, startsAt, endsAt])
   @@index([status])
   @@index([startsAt])
+  @@index([checkToken])
 }
 
 model AdminUser {
@@ -83,26 +88,48 @@ model AdminUser {
 }
 
 model SiteSettings {
-  id             String   @id @default("default")
-  brand          String   @default("Dr.Meedina")
-  doctorName     String   @default("Мадина")
-  addressUz      String   @default("Toshkent")
-  addressRu      String   @default("Ташкент")
-  addressEn      String   @default("Tashkent")
-  phone          String   @default("+998 90")
-  phoneNoteUz    String   @default("To‘liq raqam — Telegram yoki Instagram orqali")
-  phoneNoteRu    String   @default("Полный номер — в Telegram или Instagram")
-  phoneNoteEn    String   @default("Full number via Telegram or Instagram")
-  lat            Float    @default(41.33)
-  lng            Float    @default(69.28)
-  instagram      String   @default("https://www.instagram.com/dr.meedina/")
-  telegram       String   @default("https://t.me/drmeedina")
-  telegramBot    String   @default("https://t.me/Dr_Meedinabot?start=book")
-  taglineUz      String   @default("Toza teri — sizning ishonchingiz")
-  taglineRu      String   @default("Чистая кожа — твоя уверенность")
-  taglineEn      String   @default("Clear skin is your confidence")
+  id              String   @id @default("default")
+  brand           String   @default("Dr.Meedina")
+  doctorName      String   @default("Мадина")
+  addressUz       String   @default("Toshkent")
+  addressRu       String   @default("Ташкент")
+  addressEn       String   @default("Tashkent")
+  phone           String   @default("+998 90")
+  phoneNoteUz     String   @default("To‘liq raqam — Telegram yoki Instagram orqali")
+  phoneNoteRu     String   @default("Полный номер — в Telegram или Instagram")
+  phoneNoteEn     String   @default("Full number via Telegram or Instagram")
+  lat             Float    @default(41.33)
+  lng             Float    @default(69.28)
+  instagram       String   @default("https://www.instagram.com/dr.meedina/")
+  telegram        String   @default("https://t.me/drmeedina")
+  telegramBot     String   @default("https://t.me/Dr_Meedinabot?start=book")
+  taglineUz       String   @default("Toza teri — sizning ishonchingiz")
+  taglineRu       String   @default("Чистая кожа — твоя уверенность")
+  taglineEn       String   @default("Clear skin is your confidence")
   welcomeImageUrl String?
-  updatedAt      DateTime @updatedAt
+  heroVideoUrl    String?
+  heroHeadlineUz  String   @default("Toza teri — sizning ishonchingiz")
+  heroHeadlineRu  String   @default("Чистая кожа — твоя уверенность")
+  heroHeadlineEn  String   @default("Clear skin is your confidence")
+  heroSubUz       String   @default("Tibbiy ma'lumotli kosmetolog. Har bir mijozga individual yondashuv.")
+  heroSubRu       String   @default("Косметолог с медицинским образованием. Индивидуальный подход каждому.")
+  heroSubEn       String   @default("A cosmetologist with medical education. Personalized care for every patient.")
+  aboutTitleUz    String   @default("Dr.Meedina haqida")
+  aboutTitleRu    String   @default("О Dr.Meedina")
+  aboutTitleEn    String   @default("About Dr.Meedina")
+  aboutTextUz     String   @default("Men Madina — tibbiy ma'lumotli shifokor-kosmetologman.")
+  aboutTextRu     String   @default("Меня зовут Мадина — я врач-косметолог с медицинским образованием.")
+  aboutTextEn     String   @default("I'm Madina — a cosmetologist with medical education.")
+  updatedAt       DateTime @updatedAt
+}
+
+model ScheduleSettings {
+  id              String @id @default("default")
+  workDays        String @default("[1,2,3,4,5,6]")
+  openHour        Int    @default(10)
+  closeHour       Int    @default(20)
+  slotStepMinutes Int    @default(30)
+  closedDates     String @default("[]")
 }
 
 model BotUser {
@@ -122,8 +149,19 @@ model NewsPost {
   id        String   @id @default(cuid())
   text      String
   imageUrl  String?
+  imageUrls String?
   createdBy String?
   broadcast Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model TickerItem {
+  id        String   @id @default(cuid())
+  textUz    String
+  textRu    String
+  textEn    String
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
   createdAt DateTime @default(now())
 }
 
@@ -131,7 +169,7 @@ model BotActivity {
   id        String   @id @default(cuid())
   userId    String
   action    String
-  meta      String? // JSON
+  meta      String?
   createdAt DateTime @default(now())
   user      BotUser  @relation(fields: [userId], references: [id])
 

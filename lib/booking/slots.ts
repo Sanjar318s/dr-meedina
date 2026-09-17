@@ -12,6 +12,7 @@ import { fromZonedTime, toZonedTime } from "date-fns-tz";
 import { BookingStatus, Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
 import { studioConfig } from "../studio-config";
+import { getScheduleSettings, isWorkingDay, type ScheduleView } from "../schedule";
 
 const ACTIVE: BookingStatus[] = [BookingStatus.PENDING, BookingStatus.CONFIRMED];
 
@@ -32,22 +33,20 @@ function dayBoundsInTz(dateStr: string) {
   };
 }
 
-export function buildCandidateSlots(dateStr: string, durationMinutes: number): Date[] {
+export function buildCandidateSlots(
+  dateStr: string,
+  durationMinutes: number,
+  schedule: ScheduleView,
+): Date[] {
   const tz = studioConfig.timezone;
   const localDay = parse(dateStr, "yyyy-MM-dd", new Date());
   const slots: Date[] = [];
   let cursor = setMilliseconds(
-    setSeconds(
-      setMinutes(setHours(localDay, studioConfig.openHour), 0),
-      0,
-    ),
+    setSeconds(setMinutes(setHours(localDay, schedule.openHour), 0), 0),
     0,
   );
   const close = setMilliseconds(
-    setSeconds(
-      setMinutes(setHours(localDay, studioConfig.closeHour), 0),
-      0,
-    ),
+    setSeconds(setMinutes(setHours(localDay, schedule.closeHour), 0), 0),
     0,
   );
 
@@ -55,7 +54,7 @@ export function buildCandidateSlots(dateStr: string, durationMinutes: number): D
     const end = addMinutes(cursor, durationMinutes);
     if (isBefore(end, close) || +end === +close) {
       slots.push(fromZonedTime(cursor, tz));
-      cursor = addMinutes(cursor, studioConfig.slotStepMinutes);
+      cursor = addMinutes(cursor, schedule.slotStepMinutes);
     } else {
       break;
     }
@@ -63,12 +62,7 @@ export function buildCandidateSlots(dateStr: string, durationMinutes: number): D
   return slots;
 }
 
-function overlaps(
-  aStart: Date,
-  aEnd: Date,
-  bStart: Date,
-  bEnd: Date,
-): boolean {
+function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
   return aStart < bEnd && aEnd > bStart;
 }
 
@@ -77,6 +71,9 @@ export async function getAvailableSlots(params: {
   date: string;
   serviceId: string;
 }): Promise<string[]> {
+  const schedule = await getScheduleSettings();
+  if (!isWorkingDay(params.date, schedule)) return [];
+
   const service = await prisma.service.findFirst({
     where: { id: params.serviceId, isActive: true },
   });
@@ -93,7 +90,7 @@ export async function getAvailableSlots(params: {
   });
 
   const now = new Date();
-  const candidates = buildCandidateSlots(params.date, service.durationMinutes);
+  const candidates = buildCandidateSlots(params.date, service.durationMinutes, schedule);
   const free = candidates.filter((start) => {
     if (start <= now) return false;
     const end = addMinutes(start, service.durationMinutes);
@@ -118,6 +115,9 @@ export type CreateBookingInput = {
 };
 
 export async function createBooking(input: CreateBookingInput) {
+  const schedule = await getScheduleSettings();
+  if (!isWorkingDay(input.date, schedule)) throw new Error("SLOT_UNAVAILABLE");
+
   const [service, master] = await Promise.all([
     prisma.service.findFirst({ where: { id: input.serviceId, isActive: true } }),
     prisma.master.findFirst({ where: { id: input.masterId, isActive: true } }),

@@ -1,6 +1,7 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { HeroVideo } from "@/components/HeroVideo";
 import { Reveal } from "@/components/Reveal";
+import { NewsTicker } from "@/components/NewsTicker";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { pickName, pickDescription, formatPrice } from "@/lib/i18n-fields";
@@ -26,6 +27,8 @@ export default async function HomePage({
   const tc = await getTranslations({ locale, namespace: "contacts" });
   const th = await getTranslations({ locale, namespace: "hero" });
   const settings = await getSiteSettings();
+  const aboutTitle = settings.aboutTitle[loc] || t("title");
+  const aboutText = settings.aboutText[loc] || t("text");
 
   let services: Awaited<ReturnType<typeof prisma.service.findMany>> = [];
   let masters: Awaited<ReturnType<typeof prisma.master.findMany>> = [];
@@ -47,17 +50,27 @@ export default async function HomePage({
 
   return (
     <>
-      <HeroVideo brand={settings.brand} instagram={settings.socials.instagram} />
+      <HeroVideo
+        brand={settings.brand}
+        instagram={settings.socials.instagram}
+        videoUrl={settings.heroVideoUrl}
+        headline={settings.heroHeadline[loc]}
+        sub={settings.heroSub[loc]}
+        cta={th("cta")}
+        ctaSecondary={th("ctaSecondary")}
+      />
 
       <section className="mx-auto max-w-6xl px-4 py-24 md:px-6 md:py-28">
         <Reveal>
           <p className="text-xs uppercase tracking-[0.25em] text-gold">{settings.brand}</p>
           <h2 className="mt-3 max-w-2xl font-display text-4xl text-cream md:text-5xl">
-            {t("title")}
+            {aboutTitle}
           </h2>
-          <p className="mt-6 max-w-2xl leading-relaxed text-muted">{t("text")}</p>
+          <p className="mt-6 max-w-2xl leading-relaxed text-muted">{aboutText}</p>
         </Reveal>
       </section>
+
+      <NewsTicker locale={locale} />
 
       <section className="relative overflow-hidden py-24 md:py-28">
         <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent" />

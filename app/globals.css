@@ -93,3 +93,12 @@ body {
 .admin-input:focus {
   border-color: var(--color-gold);
 }
+
+@keyframes drm-ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}

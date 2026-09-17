@@ -2,25 +2,35 @@
 
 import { motion } from "framer-motion";
 import { Link } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
 
 type Props = {
   brand?: string;
   instagram: string;
+  videoUrl?: string | null;
+  headline?: string;
+  sub?: string;
+  cta?: string;
+  ctaSecondary?: string;
 };
 
-export function HeroVideo({ brand = "Dr.Meedina", instagram }: Props) {
-  const t = useTranslations("hero");
+const FALLBACK_VIDEO =
+  "https://cdn.coverr.co/videos/coverr-a-woman-getting-a-facial-massage-2753/1080p.mp4";
 
+export function HeroVideo({
+  brand = "Dr.Meedina",
+  instagram,
+  videoUrl,
+  headline,
+  sub,
+  cta = "Записаться",
+  ctaSecondary = "Instagram",
+}: Props) {
   return (
     <section className="relative flex min-h-[100svh] items-end overflow-hidden">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <video
           className="absolute inset-0 h-full w-full object-cover"
-          src={
-            process.env.NEXT_PUBLIC_HERO_VIDEO_URL ||
-            "https://cdn.coverr.co/videos/coverr-a-woman-getting-a-facial-massage-2753/1080p.mp4"
-          }
+          src={videoUrl || process.env.NEXT_PUBLIC_HERO_VIDEO_URL || FALLBACK_VIDEO}
           autoPlay
           muted
           loop
@@ -38,7 +48,7 @@ export function HeroVideo({ brand = "Dr.Meedina", instagram }: Props) {
           transition={{ duration: 0.6 }}
           className="text-xs uppercase tracking-[0.28em] text-white/70"
         >
-          {t("eyebrow")}
+          Cosmetology
         </motion.p>
         <motion.p
           initial={{ opacity: 0, y: 18 }}
@@ -48,22 +58,26 @@ export function HeroVideo({ brand = "Dr.Meedina", instagram }: Props) {
         >
           {brand}
         </motion.p>
-        <motion.h1
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.18 }}
-          className="mt-5 max-w-xl font-display text-2xl text-white/95 md:text-3xl"
-        >
-          {t("headline")}
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.28 }}
-          className="mt-4 max-w-md text-sm leading-relaxed text-white/75 md:text-base"
-        >
-          {t("sub")}
-        </motion.p>
+        {headline && (
+          <motion.h1
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.18 }}
+            className="mt-5 max-w-xl font-display text-2xl text-white/95 md:text-3xl"
+          >
+            {headline}
+          </motion.h1>
+        )}
+        {sub && (
+          <motion.p
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.28 }}
+            className="mt-4 max-w-md text-sm leading-relaxed text-white/75 md:text-base"
+          >
+            {sub}
+          </motion.p>
+        )}
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
@@ -71,7 +85,7 @@ export function HeroVideo({ brand = "Dr.Meedina", instagram }: Props) {
           className="mt-9 flex flex-wrap gap-3"
         >
           <Link href="/booking" className="btn-primary">
-            {t("cta")}
+            {cta}
           </Link>
           <a
             href={instagram}
@@ -79,7 +93,7 @@ export function HeroVideo({ brand = "Dr.Meedina", instagram }: Props) {
             rel="noreferrer"
             className="inline-flex items-center border border-white/35 px-7 py-3 text-xs uppercase tracking-[0.18em] text-white/90 transition hover:border-white hover:bg-white/10"
           >
-            {t("ctaSecondary")}
+            {ctaSecondary}
           </a>
         </motion.div>
       </div>

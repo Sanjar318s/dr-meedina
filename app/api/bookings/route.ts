@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createBooking } from "@/lib/booking/slots";
-import { notifyAdmin } from "@/lib/telegram";
-import { format } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
-import { studioConfig } from "@/lib/studio-config";
+import { notifyAdminNewBooking } from "@/lib/telegram";
 
 const schema = z.object({
   clientName: z.string().min(2).max(80),
@@ -19,16 +16,13 @@ export async function POST(req: NextRequest) {
   try {
     const body = schema.parse(await req.json());
     const booking = await createBooking({ ...body, source: "SITE" });
+    await notifyAdminNewBooking(booking);
 
-    const local = toZonedTime(booking.startsAt, studioConfig.timezone);
-    await notifyAdmin(
-      `<b>Новая запись (сайт)</b>\n` +
-        `${booking.clientName} · ${booking.clientPhone}\n` +
-        `${booking.service.nameRu} · ${booking.master.name}\n` +
-        `${format(local, "dd.MM.yyyy HH:mm")}`,
-    );
-
-    return NextResponse.json({ id: booking.id, status: booking.status });
+    return NextResponse.json({
+      id: booking.id,
+      status: booking.status,
+      checkToken: booking.checkToken,
+    });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "ERROR";
     const status =

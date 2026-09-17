@@ -61,6 +61,12 @@ async function main() {
   await prisma.service.deleteMany();
   await prisma.master.deleteMany();
 
+  await prisma.scheduleSettings.upsert({
+    where: { id: "default" },
+    create: { id: "default" },
+    update: {},
+  });
+
   const botUsername = process.env.NEXT_PUBLIC_BOT_USERNAME || "Dr_Meedinabot";
 
   await prisma.siteSettings.upsert({

@@ -36,6 +36,19 @@ const schema = z.object({
   taglineRu: z.string().min(1),
   taglineEn: z.string().min(1),
   welcomeImageUrl: z.string().optional().nullable(),
+  heroVideoUrl: z.string().optional().nullable(),
+  heroHeadlineUz: z.string().min(1),
+  heroHeadlineRu: z.string().min(1),
+  heroHeadlineEn: z.string().min(1),
+  heroSubUz: z.string().min(1),
+  heroSubRu: z.string().min(1),
+  heroSubEn: z.string().min(1),
+  aboutTitleUz: z.string().min(1),
+  aboutTitleRu: z.string().min(1),
+  aboutTitleEn: z.string().min(1),
+  aboutTextUz: z.string().min(1),
+  aboutTextRu: z.string().min(1),
+  aboutTextEn: z.string().min(1),
 });
 
 export async function PUT(req: NextRequest) {

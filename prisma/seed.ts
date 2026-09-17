@@ -1,7 +1,48 @@
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+function createClient() {
+  const tursoUrl = process.env.TURSO_DATABASE_URL;
+  const tursoToken = process.env.TURSO_AUTH_TOKEN;
+  if (tursoUrl && tursoToken) {
+    return new PrismaClient({
+      adapter: new PrismaLibSql({ url: tursoUrl, authToken: tursoToken }),
+    });
+  }
+  return new PrismaClient();
+}
+
+const prisma = createClient();
+
+const galleries = {
+  face: [
+    "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=1200&q=80",
+    "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1200&q=80",
+    "https://images.unsplash.com/photo-1512290923902-8a9f81dcad34?w=1200&q=80",
+  ],
+  bio: [
+    "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=1200&q=80",
+    "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=1200&q=80",
+    "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1200&q=80",
+  ],
+  lips: [
+    "https://images.unsplash.com/photo-1583001936908-0b8a0c0c0c0c?w=1200&q=80",
+    "https://images.unsplash.com/photo-1515377905703-c4788e73f6b8?w=1200&q=80",
+    "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=1200&q=80",
+  ],
+  hyper: [
+    "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=1200&q=80",
+    "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=1200&q=80",
+    "https://images.unsplash.com/photo-1582719471384-894fbb16e074?w=1200&q=80",
+  ],
+  five: [
+    "https://images.unsplash.com/photo-1515377905703-c4788e73f6b8?w=1200&q=80",
+    "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&q=80",
+    "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=1200&q=80",
+  ],
+};
 
 async function main() {
   const login = process.env.ADMIN_LOGIN || "admin";
@@ -14,9 +55,28 @@ async function main() {
     create: { login, passwordHash },
   });
 
+  await prisma.botActivity.deleteMany().catch(() => undefined);
+  await prisma.newsPost.deleteMany().catch(() => undefined);
   await prisma.booking.deleteMany();
   await prisma.service.deleteMany();
   await prisma.master.deleteMany();
+
+  const botUsername = process.env.NEXT_PUBLIC_BOT_USERNAME || "drmeedina";
+
+  await prisma.siteSettings.upsert({
+    where: { id: "default" },
+    update: {
+      brand: "Dr.Meedina",
+      telegramBot: `https://t.me/${botUsername}?start=book`,
+    },
+    create: {
+      id: "default",
+      brand: "Dr.Meedina",
+      telegramBot: `https://t.me/${botUsername}?start=book`,
+      welcomeImageUrl:
+        "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=1200&q=80",
+    },
+  });
 
   const services = await Promise.all([
     prisma.service.create({
@@ -33,8 +93,8 @@ async function main() {
         durationMinutes: 60,
         price: 400000,
         category: "face",
-        imageUrl:
-          "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=1200&q=80",
+        imageUrl: galleries.face[0],
+        gallery: JSON.stringify(galleries.face),
       },
     }),
     prisma.service.create({
@@ -51,8 +111,8 @@ async function main() {
         durationMinutes: 50,
         price: 900000,
         category: "injectable",
-        imageUrl:
-          "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=1200&q=80",
+        imageUrl: galleries.bio[0],
+        gallery: JSON.stringify(galleries.bio),
       },
     }),
     prisma.service.create({
@@ -69,8 +129,12 @@ async function main() {
         durationMinutes: 45,
         price: 1500000,
         category: "lips",
-        imageUrl:
+        imageUrl: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=1200&q=80",
+        gallery: JSON.stringify([
+          "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=1200&q=80",
           "https://images.unsplash.com/photo-1515377905703-c4788e73f6b8?w=1200&q=80",
+          "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1200&q=80",
+        ]),
       },
     }),
     prisma.service.create({
@@ -87,8 +151,8 @@ async function main() {
         durationMinutes: 40,
         price: 1200000,
         category: "botox",
-        imageUrl:
-          "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=1200&q=80",
+        imageUrl: galleries.hyper[0],
+        gallery: JSON.stringify(galleries.hyper),
       },
     }),
     prisma.service.create({
@@ -105,8 +169,8 @@ async function main() {
         durationMinutes: 40,
         price: 1100000,
         category: "injectable",
-        imageUrl:
-          "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1200&q=80",
+        imageUrl: galleries.five[0],
+        gallery: JSON.stringify(galleries.five),
       },
     }),
   ]);
@@ -130,8 +194,12 @@ async function main() {
     }),
   ]);
 
+  const target =
+    process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN
+      ? "Turso"
+      : "local SQLite";
   console.log(
-    `Seeded ${services.length} services, ${masters.length} masters, admin=${login}`,
+    `Seeded ${services.length} services, ${masters.length} masters, admin=${login} → ${target}`,
   );
 }
 

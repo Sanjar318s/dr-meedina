@@ -55,6 +55,7 @@ export async function DELETE(req: NextRequest) {
   if (!(await guard())) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "ID_REQUIRED" }, { status: 400 });
-  await prisma.master.update({ where: { id }, data: { isActive: false } });
+  const activate = req.nextUrl.searchParams.get("activate") === "1";
+  await prisma.master.update({ where: { id }, data: { isActive: activate } });
   return NextResponse.json({ ok: true });
 }

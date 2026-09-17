@@ -7,7 +7,7 @@
     "contacts": "Contacts"
   },
   "hero": {
-    "brand": "dr.meedina",
+    "brand": "Dr.Meedina",
     "eyebrow": "Cosmetologist MD · Tashkent",
     "headline": "Clear skin is your confidence",
     "sub": "A cosmetologist with medical education. Personalized care for every patient.",
@@ -15,19 +15,23 @@
     "ctaSecondary": "Instagram"
   },
   "about": {
-    "title": "About dr.meedina",
+    "title": "About Dr.Meedina",
     "text": "I'm Madina — a cosmetologist with medical education. I focus on healthy skin, natural results, and careful attention to your goals. Appointments in Tashkent."
   },
   "services": {
     "title": "Services",
-    "subtitle": "Treatments from dr.meedina practice",
+    "subtitle": "Treatments from Dr.Meedina practice",
     "select": "Select",
     "duration": "{minutes} min",
     "from": "from"
   },
   "masters": {
     "title": "Your doctor",
-    "subtitle": "Madina — medically trained cosmetologist"
+    "subtitle": "Madina — medically trained cosmetologist",
+    "trustEdu": "Medical education",
+    "trustResult": "Natural results",
+    "trustCity": "Appointments in Tashkent",
+    "instagram": "Instagram"
   },
   "reviews": {
     "title": "Reviews",
@@ -49,11 +53,15 @@
   "contacts": {
     "title": "Contacts",
     "subtitle": "Tashkent · Instagram & Telegram",
-    "address": "City",
+    "address": "Address",
     "phone": "Contact",
     "bot": "Message on Telegram",
+    "bookBot": "Book via Telegram bot",
     "instagram": "Instagram @dr.meedina",
-    "map": "Map"
+    "map": "Map",
+    "copyAddress": "Copy address",
+    "copied": "Copied",
+    "openMaps": "Open in Yandex Maps"
   },
   "booking": {
     "title": "Online booking",
@@ -75,6 +83,7 @@
     "summary": "Booking details"
   },
   "footer": {
-    "rights": "All rights reserved"
+    "rights": "All rights reserved",
+    "bot": "Booking bot"
   }
 }

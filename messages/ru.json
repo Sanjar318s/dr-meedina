@@ -7,7 +7,7 @@
     "contacts": "Контакты"
   },
   "hero": {
-    "brand": "dr.meedina",
+    "brand": "Dr.Meedina",
     "eyebrow": "Врач-косметолог · Ташкент",
     "headline": "Чистая кожа — твоя уверенность",
     "sub": "Косметолог с медицинским образованием. Индивидуальный подход каждому.",
@@ -15,19 +15,23 @@
     "ctaSecondary": "Instagram"
   },
   "about": {
-    "title": "О dr.meedina",
+    "title": "О Dr.Meedina",
     "text": "Меня зовут Мадина — я врач-косметолог с медицинским образованием. Работаю бережно: чистая кожа, естественный результат и внимание к вашим задачам. Приём в Ташкенте."
   },
   "services": {
     "title": "Услуги",
-    "subtitle": "Процедуры из практики dr.meedina",
+    "subtitle": "Процедуры из практики Dr.Meedina",
     "select": "Выбрать",
     "duration": "{minutes} мин",
     "from": "от"
   },
   "masters": {
     "title": "Ваш врач",
-    "subtitle": "Мадина — косметолог с мед. образованием"
+    "subtitle": "Мадина — косметолог с мед. образованием",
+    "trustEdu": "Мед. образование",
+    "trustResult": "Естественный результат",
+    "trustCity": "Приём в Ташкенте",
+    "instagram": "Instagram"
   },
   "reviews": {
     "title": "Отзывы",
@@ -49,11 +53,15 @@
   "contacts": {
     "title": "Контакты",
     "subtitle": "Ташкент · Instagram и Telegram",
-    "address": "Город",
+    "address": "Адрес",
     "phone": "Связь",
     "bot": "Написать в Telegram",
+    "bookBot": "Записаться через Telegram-бот",
     "instagram": "Instagram @dr.meedina",
-    "map": "Карта"
+    "map": "Карта",
+    "copyAddress": "Скопировать адрес",
+    "copied": "Скопировано",
+    "openMaps": "Открыть в Яндекс.Картах"
   },
   "booking": {
     "title": "Онлайн-запись",
@@ -75,6 +83,7 @@
     "summary": "Детали записи"
   },
   "footer": {
-    "rights": "Все права защищены"
+    "rights": "Все права защищены",
+    "bot": "Бот записи"
   }
 }

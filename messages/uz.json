@@ -7,7 +7,7 @@
     "contacts": "Kontaktlar"
   },
   "hero": {
-    "brand": "dr.meedina",
+    "brand": "Dr.Meedina",
     "eyebrow": "Shifokor-kosmetolog · Toshkent",
     "headline": "Toza teri — sizning ishonchingiz",
     "sub": "Tibbiy ma'lumotli kosmetolog. Har bir mijozga individual yondashuv.",
@@ -15,19 +15,23 @@
     "ctaSecondary": "Instagram"
   },
   "about": {
-    "title": "dr.meedina haqida",
+    "title": "Dr.Meedina haqida",
     "text": "Men Madina — tibbiy ma'lumotli shifokor-kosmetologman. Asosiy e'tibor: toza teri, tabiiy natija va sizning maqsadingizga ehtiyotkor yondashuv. Qabul Toshkentda."
   },
   "services": {
     "title": "Xizmatlar",
-    "subtitle": "dr.meedina amaliyotidagi muolajalar",
+    "subtitle": "Dr.Meedina amaliyotidagi muolajalar",
     "select": "Tanlash",
     "duration": "{minutes} daqiqa",
     "from": "dan"
   },
   "masters": {
     "title": "Sizning shifokoringiz",
-    "subtitle": "Madina — tibbiy ma'lumotli kosmetolog"
+    "subtitle": "Madina — tibbiy ma'lumotli kosmetolog",
+    "trustEdu": "Tibbiy ta'lim",
+    "trustResult": "Tabiiy natija",
+    "trustCity": "Qabul Toshkentda",
+    "instagram": "Instagram"
   },
   "reviews": {
     "title": "Sharhlar",
@@ -49,11 +53,15 @@
   "contacts": {
     "title": "Kontaktlar",
     "subtitle": "Toshkent · Instagram va Telegram",
-    "address": "Shahar",
+    "address": "Manzil",
     "phone": "Aloqa",
     "bot": "Telegramga yozish",
+    "bookBot": "Telegram-bot orqali yozilish",
     "instagram": "Instagram @dr.meedina",
-    "map": "Xarita"
+    "map": "Xarita",
+    "copyAddress": "Manzilni nusxalash",
+    "copied": "Nusxalandi",
+    "openMaps": "Yandex xaritada ochish"
   },
   "booking": {
     "title": "Onlayn yozilish",
@@ -75,6 +83,7 @@
     "summary": "Yozilish ma'lumotlari"
   },
   "footer": {
-    "rights": "Barcha huquqlar himoyalangan"
+    "rights": "Barcha huquqlar himoyalangan",
+    "bot": "Yozilish boti"
   }
 }

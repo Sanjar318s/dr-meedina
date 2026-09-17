@@ -15,7 +15,7 @@ const sans = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "dr.meedina — врач-косметолог | Ташкент",
+  title: "Dr.Meedina — врач-косметолог | Ташкент",
   description:
     "Косметолог с медицинским образованием. Чистая кожа — твоя уверенность. Онлайн-запись в Ташкенте.",
   robots: {

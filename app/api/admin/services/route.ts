@@ -24,6 +24,8 @@ const serviceSchema = z.object({
   durationMinutes: z.number().int().positive(),
   price: z.number().int().nonnegative(),
   imageUrl: z.string().optional().nullable(),
+  gallery: z.string().optional().nullable(),
+  videoUrl: z.string().optional().nullable(),
   category: z.string().min(1),
   isActive: z.boolean().optional(),
 });
@@ -35,6 +37,8 @@ export async function POST(req: NextRequest) {
     data: {
       ...data,
       imageUrl: data.imageUrl || null,
+      gallery: data.gallery || null,
+      videoUrl: data.videoUrl || null,
       isActive: data.isActive ?? true,
     },
   });
@@ -48,7 +52,12 @@ export async function PUT(req: NextRequest) {
   const { id, ...rest } = data;
   const service = await prisma.service.update({
     where: { id },
-    data: { ...rest, imageUrl: rest.imageUrl || null },
+    data: {
+      ...rest,
+      imageUrl: rest.imageUrl || null,
+      gallery: rest.gallery || null,
+      videoUrl: rest.videoUrl || null,
+    },
   });
   return NextResponse.json(service);
 }
@@ -57,6 +66,7 @@ export async function DELETE(req: NextRequest) {
   if (!(await guard())) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "ID_REQUIRED" }, { status: 400 });
-  await prisma.service.update({ where: { id }, data: { isActive: false } });
+  const activate = req.nextUrl.searchParams.get("activate") === "1";
+  await prisma.service.update({ where: { id }, data: { isActive: activate } });
   return NextResponse.json({ ok: true });
 }

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -20,13 +21,19 @@ export default async function LocaleLayout({
   if (!routing.locales.includes(locale as "uz" | "ru" | "en")) notFound();
   setRequestLocale(locale);
   const messages = await getMessages();
+  const settings = await getSiteSettings();
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <div className="flex min-h-screen flex-col text-charcoal">
-        <Header />
+      <div className="flex min-h-screen flex-col text-cream">
+        <Header brand={settings.brand} />
         <main className="flex-1">{children}</main>
-        <Footer />
+        <Footer
+          brand={settings.brand}
+          instagram={settings.socials.instagram}
+          telegram={settings.socials.telegram}
+          telegramBot={settings.socials.telegramBot}
+        />
       </div>
     </NextIntlClientProvider>
   );

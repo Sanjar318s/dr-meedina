@@ -3,23 +3,32 @@
 import { motion } from "framer-motion";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
-import { studioConfig } from "@/lib/studio-config";
 
-export function HeroVideo() {
+type Props = {
+  brand?: string;
+  instagram: string;
+};
+
+export function HeroVideo({ brand = "Dr.Meedina", instagram }: Props) {
   const t = useTranslations("hero");
-  const videoId = process.env.NEXT_PUBLIC_HERO_YOUTUBE_ID || "JnT51BGOiJs";
 
   return (
     <section className="relative flex min-h-[100svh] items-end overflow-hidden">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <iframe
-          title="dr.meedina atmosphere"
-          className="absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2 scale-[1.15] border-0"
-          src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&playsinline=1&rel=0&modestbranding=1&showinfo=0`}
-          allow="autoplay; encrypted-media"
+        <video
+          className="absolute inset-0 h-full w-full object-cover"
+          src={
+            process.env.NEXT_PUBLIC_HERO_VIDEO_URL ||
+            "https://cdn.coverr.co/videos/coverr-a-woman-getting-a-facial-massage-2753/1080p.mp4"
+          }
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=1600&q=80"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1614]/80 via-[#1a1614]/35 to-[#1a1614]/15" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1a1614]/50 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-ink/60 via-transparent to-transparent" />
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-24 pt-32 md:px-6 md:pb-28">
@@ -27,7 +36,7 @@ export function HeroVideo() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-xs tracking-[0.28em] uppercase text-white/70"
+          className="text-xs uppercase tracking-[0.28em] text-white/70"
         >
           {t("eyebrow")}
         </motion.p>
@@ -37,7 +46,7 @@ export function HeroVideo() {
           transition={{ duration: 0.75, delay: 0.08 }}
           className="mt-4 font-display text-5xl text-white md:text-7xl lg:text-8xl"
         >
-          {t("brand")}
+          {brand}
         </motion.p>
         <motion.h1
           initial={{ opacity: 0, y: 18 }}
@@ -65,10 +74,10 @@ export function HeroVideo() {
             {t("cta")}
           </Link>
           <a
-            href={studioConfig.socials.instagram}
+            href={instagram}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center border border-white/35 px-7 py-3 text-xs tracking-[0.18em] uppercase text-white/90 transition hover:border-white hover:bg-white/10"
+            className="inline-flex items-center border border-white/35 px-7 py-3 text-xs uppercase tracking-[0.18em] text-white/90 transition hover:border-white hover:bg-white/10"
           >
             {t("ctaSecondary")}
           </a>

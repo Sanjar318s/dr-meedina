@@ -13,7 +13,7 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen bg-ink px-4 py-20 text-cream">
-      <h1 className="text-center font-display text-3xl">dr.meedina</h1>
+      <h1 className="text-center font-display text-3xl">Dr.Meedina</h1>
       <AdminLoginForm />
     </div>
   );

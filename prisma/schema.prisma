@@ -29,6 +29,8 @@ model Service {
   durationMinutes Int
   price           Int
   imageUrl        String?
+  gallery         String? // JSON array of image URLs
+  videoUrl        String?
   category        String
   isActive        Boolean   @default(true)
   createdAt       DateTime  @default(now())
@@ -78,4 +80,61 @@ model AdminUser {
   login        String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
+}
+
+model SiteSettings {
+  id             String   @id @default("default")
+  brand          String   @default("Dr.Meedina")
+  doctorName     String   @default("Мадина")
+  addressUz      String   @default("Toshkent")
+  addressRu      String   @default("Ташкент")
+  addressEn      String   @default("Tashkent")
+  phone          String   @default("+998 90")
+  phoneNoteUz    String   @default("To‘liq raqam — Telegram yoki Instagram orqali")
+  phoneNoteRu    String   @default("Полный номер — в Telegram или Instagram")
+  phoneNoteEn    String   @default("Full number via Telegram or Instagram")
+  lat            Float    @default(41.33)
+  lng            Float    @default(69.28)
+  instagram      String   @default("https://www.instagram.com/dr.meedina/")
+  telegram       String   @default("https://t.me/drmeedina")
+  telegramBot    String   @default("https://t.me/drmeedina?start=book")
+  taglineUz      String   @default("Toza teri — sizning ishonchingiz")
+  taglineRu      String   @default("Чистая кожа — твоя уверенность")
+  taglineEn      String   @default("Clear skin is your confidence")
+  welcomeImageUrl String?
+  updatedAt      DateTime @updatedAt
+}
+
+model BotUser {
+  id             String        @id @default(cuid())
+  telegramId     String        @unique
+  username       String?
+  firstName      String?
+  lastName       String?
+  lang           String        @default("ru")
+  subscribedNews Boolean       @default(true)
+  lastSeenAt     DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+  activities     BotActivity[]
+}
+
+model NewsPost {
+  id        String   @id @default(cuid())
+  text      String
+  imageUrl  String?
+  createdBy String?
+  broadcast Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model BotActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  meta      String? // JSON
+  createdAt DateTime @default(now())
+  user      BotUser  @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
 }

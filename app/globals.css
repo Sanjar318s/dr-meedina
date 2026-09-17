@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-pearl: #f6f1ec;
-  --color-mist: #ebe4db;
-  --color-blush: #f0e6e0;
-  --color-charcoal: #1a1614;
-  --color-ink: #1a1614;
-  --color-muted: #6b635c;
+  --color-pearl: #e8dfd0;
+  --color-mist: #1a1a1a;
+  --color-blush: #141414;
+  --color-charcoal: #e8dfd0;
+  --color-ink: #0a0a0a;
+  --color-muted: #a89f94;
   --color-sand: #8a7f74;
-  --color-cream: #f6f1ec;
-  --color-gold: #b8956c;
-  --color-gold-dim: #9a7a52;
+  --color-cream: #e8dfd0;
+  --color-gold: #c6a75e;
+  --color-gold-dim: #9a8045;
   --color-rose: #c4a090;
   --font-display: var(--font-display);
   --font-sans: var(--font-sans);
@@ -22,21 +22,21 @@ html {
 
 body {
   background:
-    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(196, 160, 144, 0.18), transparent 55%),
-    radial-gradient(ellipse 60% 40% at 90% 0%, rgba(184, 149, 108, 0.12), transparent 50%),
-    linear-gradient(180deg, #f8f4ef 0%, #f3ebe3 45%, #efe6dc 100%);
-  color: var(--color-charcoal);
+    radial-gradient(ellipse 70% 45% at 15% -5%, rgba(198, 167, 94, 0.12), transparent 55%),
+    radial-gradient(ellipse 50% 35% at 90% 10%, rgba(198, 167, 94, 0.06), transparent 50%),
+    linear-gradient(180deg, #0a0a0a 0%, #0f0f0f 50%, #0a0a0a 100%);
+  color: var(--color-cream);
   font-family: var(--font-sans), system-ui, sans-serif;
   min-height: 100%;
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--color-gold) 35%, transparent);
-  color: var(--color-charcoal);
+  background: color-mix(in srgb, var(--color-gold) 40%, transparent);
+  color: white;
 }
 
 .surface-soft {
-  background: color-mix(in srgb, white 55%, transparent);
+  background: color-mix(in srgb, white 6%, transparent);
   backdrop-filter: blur(8px);
 }
 
@@ -46,7 +46,7 @@ body {
   justify-content: center;
   border: 1px solid var(--color-gold);
   background: var(--color-gold);
-  color: white;
+  color: #0a0a0a;
   padding: 0.85rem 1.75rem;
   font-size: 0.8rem;
   letter-spacing: 0.18em;
@@ -57,16 +57,17 @@ body {
 .btn-primary:hover {
   background: var(--color-gold-dim);
   border-color: var(--color-gold-dim);
+  color: white;
   transform: translateY(-1px);
-  box-shadow: 0 10px 30px rgba(184, 149, 108, 0.25);
+  box-shadow: 0 10px 30px rgba(198, 167, 94, 0.25);
 }
 
 .btn-ghost {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--color-charcoal) 18%, transparent);
-  color: var(--color-charcoal);
+  border: 1px solid color-mix(in srgb, var(--color-cream) 22%, transparent);
+  color: var(--color-cream);
   padding: 0.85rem 1.75rem;
   font-size: 0.8rem;
   letter-spacing: 0.18em;
@@ -76,6 +77,19 @@ body {
 
 .btn-ghost:hover {
   border-color: var(--color-gold);
-  color: var(--color-gold-dim);
-  background: color-mix(in srgb, white 40%, transparent);
+  color: var(--color-gold);
+  background: color-mix(in srgb, var(--color-gold) 8%, transparent);
+}
+
+.admin-input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.6rem 0.75rem;
+  color: var(--color-cream);
+  outline: none;
+}
+
+.admin-input:focus {
+  border-color: var(--color-gold);
 }

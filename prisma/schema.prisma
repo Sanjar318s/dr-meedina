@@ -143,6 +143,7 @@ model BotUser {
   lang           String        @default("ru")
   subscribedNews Boolean       @default(true)
   lastSeenAt     DateTime      @default(now())
+  tgUiMsgId      Int?
   createdAt      DateTime      @default(now())
   activities     BotActivity[]
 }

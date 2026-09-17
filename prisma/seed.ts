@@ -61,7 +61,7 @@ async function main() {
   await prisma.service.deleteMany();
   await prisma.master.deleteMany();
 
-  const botUsername = process.env.NEXT_PUBLIC_BOT_USERNAME || "drmeedina";
+  const botUsername = process.env.NEXT_PUBLIC_BOT_USERNAME || "Dr_Meedinabot";
 
   await prisma.siteSettings.upsert({
     where: { id: "default" },

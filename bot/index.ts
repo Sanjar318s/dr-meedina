@@ -3,7 +3,7 @@ import type { Context, SessionFlavor } from "grammy";
 import { format, addDays } from "date-fns";
 import { prisma } from "../lib/prisma";
 import { createBooking, getAvailableSlots, cancelBooking } from "../lib/booking/slots";
-import { notifyAdminNewBooking } from "../lib/telegram";
+import { notifyAdminNewBooking, formatQrStatusAlert, refreshBookingTelegramCard } from "../lib/telegram";
 import { getSiteSettings } from "../lib/site-settings";
 import { getScheduleSettings, isWorkingDay } from "../lib/schedule";
 import { isAdmin, touchBotUser } from "../lib/bot-users";
@@ -455,12 +455,10 @@ export function createBot() {
       where: { id },
       data: { status: status as "CONFIRMED" | "CANCELLED" },
     });
-    await ctx.answerCallbackQuery({ text: status === "CONFIRMED" ? "Принят" : "Отклонён" });
-    try {
-      await ctx.editMessageReplyMarkup({ reply_markup: undefined });
-    } catch {
-      /* ignore */
-    }
+    await refreshBookingTelegramCard(id);
+    await ctx.answerCallbackQuery({
+      text: status === "CONFIRMED" ? "Принята" : "Отклонена",
+    });
   });
 
   bot.callbackQuery(/^bcheckin:(.+)$/, async (ctx) => {
@@ -468,18 +466,16 @@ export function createBot() {
     const id = ctx.match![1];
     const booking = await prisma.booking.findUnique({ where: { id } });
     if (!booking) {
-      await ctx.answerCallbackQuery({ text: "Не найдено" });
+      await ctx.answerCallbackQuery({ text: "Не найдено", show_alert: true });
       return;
     }
-    if (booking.status === "SERVED") {
-      await ctx.answerCallbackQuery({ text: "Уже SERVED" });
-      return;
-    }
-    await prisma.booking.update({
-      where: { id },
-      data: { status: "SERVED", servedAt: new Date() },
+    // Only show QR status — never mark SERVED from this button
+    await ctx.answerCallbackQuery({
+      text: formatQrStatusAlert(booking),
+      show_alert: true,
     });
-    await ctx.answerCallbackQuery({ text: "Check-in ✓" });
+    // Refresh card if already SERVED (hide buttons) or status text changed
+    await refreshBookingTelegramCard(id);
   });
 
   bot.callbackQuery(/^bforget:(.+)$/, async (ctx) => {

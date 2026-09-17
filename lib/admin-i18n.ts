@@ -52,6 +52,9 @@ const dict = {
     translate: "Автоперевод",
     toTelegram: "В Telegram",
     toSite: "На сайт (дорожка)",
+    delete: "Удалить",
+    deleteConfirm: "Удалить эту запись навсегда?",
+    deleted: "Запись удалена",
   },
   uz: {
     title: "Admin · Dr.Meedina",
@@ -104,6 +107,9 @@ const dict = {
     translate: "Avtomatik tarjima",
     toTelegram: "Telegramga",
     toSite: "Saytga (lenta)",
+    delete: "O‘chirish",
+    deleteConfirm: "Bu yozuvni butunlay o‘chirasizmi?",
+    deleted: "Yozuv o‘chirildi",
   },
   en: {
     title: "Admin · Dr.Meedina",
@@ -156,6 +162,9 @@ const dict = {
     translate: "Auto-translate",
     toTelegram: "To Telegram",
     toSite: "To site (ticker)",
+    delete: "Delete",
+    deleteConfirm: "Delete this booking permanently?",
+    deleted: "Booking deleted",
   },
 } as const;
 

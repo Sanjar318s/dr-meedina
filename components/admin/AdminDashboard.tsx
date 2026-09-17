@@ -18,6 +18,7 @@ import {
   Receipt,
   Settings,
   Sparkles,
+  Trash2,
   UserRound,
   Users,
   X,
@@ -208,6 +209,22 @@ export function AdminDashboard() {
     await loadStats();
   }
 
+  async function deleteBooking(b: Booking) {
+    const ok = window.confirm(
+      `${t.deleteConfirm}\n\n${b.clientName} · ${format(new Date(b.startsAt), "dd.MM.yyyy HH:mm")}`,
+    );
+    if (!ok) return;
+    const res = await fetch(`/api/admin/bookings?id=${encodeURIComponent(b.id)}`, { method: "DELETE" });
+    if (!res.ok) {
+      setMsg("Ошибка удаления");
+      return;
+    }
+    if (receiptId === b.id) setReceiptId(null);
+    setMsg(t.deleted);
+    await loadBookings();
+    await loadStats();
+  }
+
   async function logout() {
     await fetch("/api/admin/logout", { method: "POST" });
     window.location.href = "/admin";
@@ -331,10 +348,10 @@ export function AdminDashboard() {
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex gap-2">
-                        <button type="button" className="text-gold" onClick={() => patchBooking(b.id, { status: "CONFIRMED" })}>
+                        <button type="button" className="text-gold" title="Принять" onClick={() => patchBooking(b.id, { status: "CONFIRMED" })}>
                           <Check className="h-4 w-4" />
                         </button>
-                        <button type="button" className="text-sand" onClick={() => patchBooking(b.id, { status: "CANCELLED" })}>
+                        <button type="button" className="text-sand" title="Отклонить" onClick={() => patchBooking(b.id, { status: "CANCELLED" })}>
                           <X className="h-4 w-4" />
                         </button>
                         <button
@@ -344,6 +361,14 @@ export function AdminDashboard() {
                           onClick={() => setReceiptId(receiptId === b.id ? null : b.id)}
                         >
                           <Receipt className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          className="text-red-300/80 hover:text-red-300"
+                          title={t.delete}
+                          onClick={() => void deleteBooking(b)}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </td>

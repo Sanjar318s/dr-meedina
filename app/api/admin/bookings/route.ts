@@ -97,3 +97,17 @@ export async function PATCH(req: NextRequest) {
   });
   return NextResponse.json(booking);
 }
+
+export async function DELETE(req: NextRequest) {
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+  }
+  const id = req.nextUrl.searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "ID_REQUIRED" }, { status: 400 });
+
+  const existing = await prisma.booking.findUnique({ where: { id } });
+  if (!existing) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
+
+  await prisma.booking.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
+}

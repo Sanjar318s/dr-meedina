@@ -11,6 +11,8 @@ async function main() {
   const statements = [
     `ALTER TABLE "Service" ADD COLUMN "gallery" TEXT`,
     `ALTER TABLE "Service" ADD COLUMN "videoUrl" TEXT`,
+    `ALTER TABLE "Booking" ADD COLUMN "tgNotifyChatId" TEXT`,
+    `ALTER TABLE "Booking" ADD COLUMN "tgNotifyMsgId" INTEGER`,
     `ALTER TABLE "Booking" ADD COLUMN "checkToken" TEXT`,
     `ALTER TABLE "Booking" ADD COLUMN "servedAt" DATETIME`,
     `ALTER TABLE "Booking" ADD COLUMN "tgHidden" BOOLEAN NOT NULL DEFAULT false`,
